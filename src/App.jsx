@@ -9,11 +9,11 @@ import LogIn from "./pages/LogIn";
 import VerticalNav from "./pages/VerticalNav";
 import Dashboard from "./pages/Student/Dashboard";
 import CourseCatalog from "./pages/Student/CourseCatalog";
-import CoursePlayer from "./pages/Student/coursePlayer";
+import CoursePlayer from "./pages/Student/CoursePlayer";
 import Quiz from "./pages/Student/Quiz";
-import QuizResult from "./pages/Student/QuizResult";
+import QuizResult from "./pages/Student/Assigmnent";
+import Grandes from "./pages/Student/QuizResult";
 import Assigmnent from "./pages/Student/Assigmnent";
-import Grandes from "./pages/Student/Grandes";
 import Forum from "./pages/Student/Forum";
 import Certificate from "./pages/Student/Certificate";
 
