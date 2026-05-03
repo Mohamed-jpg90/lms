@@ -14,7 +14,7 @@ function LogIn({ onLoginSuccess }) {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const [role,      setRole]      = useState(null);
+  const [role, setRole]      = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
   const onSubmit = async (data) => {
@@ -24,22 +24,21 @@ function LogIn({ onLoginSuccess }) {
         password: data.password,
       });
 
-      const normalizedRole = res.data.role
-        ?.toLowerCase()
-        .replace("role_", ""); 
+      const normalizedRole = res.data.role?.toLowerCase()
 
       setRole(normalizedRole);
 
       onLoginSuccess(res.data.token, {
-        id:        res.data.id,
-        firstname: res.data.firstname || res.data.firstname || "",
-        lastname:  res.data.lastname  || res.data.lastname  || "",
-        email:     res.data.email,
-        role:      normalizedRole,
+        id: res.data.id,
+        firstname: res.data.firstname  || "",
+        lastname: res.data.lastname   || "",
+        email:  res.data.email,
+        role: normalizedRole,
+        id:res.data.id
       });
 
       setSubmitted(true);
-      reset();
+      reset()
     } catch (error) {
       console.error(error);
       if (error.response) {
@@ -61,9 +60,7 @@ function LogIn({ onLoginSuccess }) {
     <div className="auth-page">
       <div className="auth-form-wrap">
 
-        {/* Brand */}
         <div className="auth-brand">
-          <span className="auth-brand__logo">🎓</span>
           <span className="auth-brand__name">LMS Platform</span>
         </div>
 
@@ -72,7 +69,6 @@ function LogIn({ onLoginSuccess }) {
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
-          {/* Email */}
           <div className="auth-field">
             <input
               type="email"

@@ -6,7 +6,7 @@ import axios from "axios";
 
 const ROLE_OPTIONS = [
   { value: "STUDENT",    label: "Student",    desc: "Browse & enroll in courses" },
-  { value: "INSTRUCTOR", label: "Instructor", desc: "Create & manage courses"    },
+  // { value: "INSTRUCTOR", label: "Instructor", desc: "Create & manage courses"    },
   // { value: "ADMIN",      label: "Admin",      desc: "Full platform access"       },
 ];
 
@@ -29,16 +29,14 @@ function Register({ onLoginSuccess }) {
   const onSubmit = async (data) => {
     try {
       const res = await axios.post("http://localhost:8080/api/auth/signup", {
-        email:     data.email,
+        email: data.email,
         password:  data.password,
-        firstname: data.firstName,
-        lastname:  data.lastName,
-        role:      data.role.toUpperCase(),
+        firstname:data.firstName,
+        lastname: data.lastName,
+        role: data.role.toUpperCase(),
       });
 
-      const normalizedRole = res.data.role
-        ?.toLowerCase()
-        .replace("role_", "");
+      const normalizedRole = res.data.role?.toLowerCase().replace("role_", "");
 
       setRole(normalizedRole);
 
@@ -48,6 +46,7 @@ function Register({ onLoginSuccess }) {
         lastname:  res.data.lastname  || res.data.lastname  || "",
         email:     res.data.email,
         role:      normalizedRole,
+        id : res.data.id
       });
 
       setSubmitted(true);
@@ -64,7 +63,7 @@ function Register({ onLoginSuccess }) {
 
   useEffect(() => {
     if (!submitted || !role) return;
-    if      (role === "student")    navigate("/student/dashboard",    { replace: true });
+    if (role === "student")    navigate("/student/dashboard",    { replace: true });
     else if (role === "instructor") navigate("/instructor/dashboard", { replace: true });
     else                            navigate("/admin/dashboard",      { replace: true });
   }, [submitted, role, navigate]);
@@ -111,7 +110,6 @@ function Register({ onLoginSuccess }) {
             </div>
           </div>
 
-          {/* Email */}
           <div className="auth-field">
             <input
               type="email"
@@ -128,7 +126,6 @@ function Register({ onLoginSuccess }) {
             {errors.email && <p>{errors.email.message}</p>}
           </div>
 
-          {/* Password */}
           <div className="auth-field">
             <input
               type="password"
@@ -146,7 +143,6 @@ function Register({ onLoginSuccess }) {
             {errors.password && <p>{errors.password.message}</p>}
           </div>
 
-          {/* Confirm Password */}
           <div className="auth-field">
             <input
               type="password"
@@ -161,7 +157,6 @@ function Register({ onLoginSuccess }) {
             {errors.confirmPassword && <p>{errors.confirmPassword.message}</p>}
           </div>
 
-          {/* Role selector */}
           <div className="auth-field">
             <label className="auth-label">I want to join as</label>
             <div className="auth-role-grid">

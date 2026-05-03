@@ -1,37 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 // import "./pages.css";
-
-/* ── Mock data matching Certificate entity ── */
-const MOCK_CERTIFICATES = [
-  {
-    id: 1,
-    certificateCode: "LMS-2025-RC-00128",
-    finalScore: 91.5,
-    issuedAt: "2025-03-14T10:30:00",
-    valid: true,
-    student: { firstName: "Youssef", lastName: "Zienhoum" },
-    course: {
-      title: "React from Zero to Hero",
-      instructor: { firstName: "Sara", lastName: "Ahmed" },
-      category: { name: "Web Development" },
-      totalLessons: 8,
-    },
-  },
-  {
-    id: 2,
-    certificateCode: "LMS-2025-SB-00204",
-    finalScore: 84.0,
-    issuedAt: "2025-01-28T09:15:00",
-    valid: true,
-    student: { firstName: "Youssef", lastName: "Zienhoum" },
-    course: {
-      title: "Spring Boot & Microservices",
-      instructor: { firstName: "Karim", lastName: "Hassan" },
-      category: { name: "Backend" },
-      totalLessons: 14,
-    },
-  },
-];
 
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -49,12 +18,22 @@ function CertCard({ cert }) {
     const el = cardRef.current;
     const win = window.open("", "_blank");
     win.document.write(`
-      <html><head><title>Certificate</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
-        body { margin: 0; background: #fff; display:flex; justify-content:center; padding:40px; }
-      </style>
-      </head><body>${el.outerHTML}</body></html>
+      <html>
+        <head>
+          <title>Certificate</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
+            body {
+              margin: 0;
+              background: #fff;
+              display: flex;
+              justify-content: center;
+              padding: 40px;
+            }
+          </style>
+        </head>
+        <body>${el.outerHTML}</body>
+      </html>
     `);
     win.document.close();
     win.print();
@@ -62,16 +41,20 @@ function CertCard({ cert }) {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({ title: `Certificate — ${cert.course.title}`, url: `/certificate/${cert.id}` });
+      navigator.share({
+        title: `Certificate — ${cert.course.title}`,
+        url: `/certificate/${cert.id}`,
+      });
     } else {
-      navigator.clipboard.writeText(`${window.location.origin}/certificate/${cert.id}`);
+      navigator.clipboard.writeText(
+        `${window.location.origin}/certificate/${cert.id}`
+      );
       alert("Certificate link copied to clipboard!");
     }
   };
 
   return (
     <div className="cert-wrap">
-      {/* ── Printable certificate ── */}
       <div className="cert-card" ref={cardRef}>
         <span className="cert-corner cert-corner--tl" />
         <span className="cert-corner cert-corner--tr" />
@@ -101,20 +84,10 @@ function CertCard({ cert }) {
 
         <div className="cert-meta-row">
           <div className="cert-meta-item">
-            <span className="cert-meta-label">Category</span>
-            <span className="cert-meta-val">{cert.course.category.name}</span>
-          </div>
-          <div className="cert-meta-sep" />
-          <div className="cert-meta-item">
-            <span className="cert-meta-label">Instructor</span>
-            <span className="cert-meta-val">
-              {cert.course.instructor.firstName} {cert.course.instructor.lastName}
-            </span>
-          </div>
-          <div className="cert-meta-sep" />
-          <div className="cert-meta-item">
             <span className="cert-meta-label">Issued</span>
-            <span className="cert-meta-val">{formatDate(cert.issuedAt)}</span>
+            <span className="cert-meta-val">
+              {formatDate(cert.issuedAt)}
+            </span>
           </div>
         </div>
 
@@ -129,7 +102,6 @@ function CertCard({ cert }) {
         </div>
       </div>
 
-      {/* ── Actions ── */}
       <div className="cert-actions">
         <button className="cert-btn cert-btn--primary" onClick={handlePrint}>
           ⬇ Download / Print
@@ -138,7 +110,9 @@ function CertCard({ cert }) {
           ↗ Share Certificate
         </button>
         <a
-          href={`https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin + "/certificate/" + cert.id)}`}
+          href={`https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+            window.location.origin + "/certificate/" + cert.id
+          )}`}
           target="_blank"
           rel="noopener noreferrer"
           className="cert-btn cert-btn--linkedin"
@@ -152,13 +126,54 @@ function CertCard({ cert }) {
 
 /* ── Main page ── */
 export default function Certificate() {
+  const [certificates, setCertificates] = useState([]);
   const [selected, setSelected] = useState(null);
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      const res = await axios.get(
+        "http://localhost:8080/api/certificates",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // 🔄 mapping API → UI model
+      const mapped = res.data.map((c) => {
+        const [firstName, ...rest] = c.studentName.split(" ");
+        return {
+          id: c.id,
+          certificateCode: c.certificateCode,
+          finalScore: c.finalScore,
+          issuedAt: c.issuedAt,
+          valid: c.valid,
+          student: {
+            firstName,
+            lastName: rest.join(" "),
+          },
+          course: {
+            title: c.courseTitle,
+          },
+        };
+      });
+
+      setCertificates(mapped);
+    };
+
+    fetchCertificates();
+  }, [token]);
 
   if (selected) {
     return (
       <div className="cert-page">
         <div className="cert-page__nav">
-          <button className="cert-nav-back" onClick={() => setSelected(null)}>
+          <button
+            className="cert-nav-back"
+            onClick={() => setSelected(null)}
+          >
             ← All Certificates
           </button>
         </div>
@@ -172,29 +187,40 @@ export default function Certificate() {
       <div className="db-hero ">
         <h1 className="db-hero__name">My Certificates</h1>
         <p className="catalog-header__sub">
-          {MOCK_CERTIFICATES.length} certificate{MOCK_CERTIFICATES.length !== 1 ? "s" : ""} earned
+          {certificates.length} certificate
+          {certificates.length !== 1 ? "s" : ""} earned
         </p>
       </div>
 
       <div className="cert-list">
-        {MOCK_CERTIFICATES.map((cert) => (
+        {certificates.map((cert) => (
           <div key={cert.id} className="cert-list-item">
             <div className="cert-list-item__icon">🏆</div>
             <div className="cert-list-item__info">
-              <h3 className="cert-list-item__course">{cert.course.title}</h3>
+              <h3 className="cert-list-item__course">
+                {cert.course.title}
+              </h3>
               <p className="cert-list-item__meta">
-                {cert.course.category.name} · Score: {cert.finalScore}% · {formatDate(cert.issuedAt)}
+                Score: {cert.finalScore}% ·{" "}
+                {formatDate(cert.issuedAt)}
               </p>
-              <p className="cert-list-item__code">{cert.certificateCode}</p>
+              <p className="cert-list-item__code">
+                {cert.certificateCode}
+              </p>
             </div>
-            {cert.valid && <span className="cert-list-item__badge">✓ Valid</span>}
-            <button className="cert-list-item__view" onClick={() => setSelected(cert)}>
+            {cert.valid && (
+              <span className="cert-list-item__badge">✓ Valid</span>
+            )}
+            <button
+              className="cert-list-item__view"
+              onClick={() => setSelected(cert)}
+            >
               View →
             </button>
           </div>
         ))}
 
-        {MOCK_CERTIFICATES.length === 0 && (
+        {certificates.length === 0 && (
           <div className="cert-empty">
             <span className="cert-empty__icon">🎓</span>
             <p>Complete a course to earn your first certificate.</p>

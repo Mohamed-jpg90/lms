@@ -1,101 +1,106 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { useEffect } from "react";
 
-const MOCK_COURSES = [
-  {
-    id: 1,
-    title: "React from Zero to Hero",
-    description: "Master modern React with hooks, context, and real-world project patterns that scale.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&q=80",
-    published: true,
-    free: false,
-    totalLessons: 42,
-    totalDuration: 1380,
-    level: "BEGINNER",
-    createdAt: "2024-11-10T09:00:00",
-    instructor: { id: 1, firstName: "Sara", lastName: "Ahmed" },
-    category: { id: 1, name: "Web Development" },
-    enrollments: new Array(1240),
-  },
-  {
-    id: 2,
-    title: "Spring Boot & Microservices",
-    description: "Build production-grade Java microservices with Spring Boot, Docker, and Kubernetes.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80",
-    published: true,
-    free: false,
-    totalLessons: 58,
-    totalDuration: 2100,
-    level: "ADVANCED",
-    createdAt: "2024-10-01T09:00:00",
-    instructor: { id: 2, firstName: "Karim", lastName: "Hassan" },
-    category: { id: 2, name: "Backend" },
-    enrollments: new Array(870),
-  },
-  {
-    id: 3,
-    title: "UI/UX Design Fundamentals",
-    description: "Learn design thinking, Figma, user research, and prototyping from scratch.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80",
-    published: true,
-    free: true,
-    totalLessons: 24,
-    totalDuration: 720,
-    level: "BEGINNER",
-    createdAt: "2024-12-05T09:00:00",
-    instructor: { id: 3, firstName: "Nour", lastName: "El-Sayed" },
-    category: { id: 3, name: "Design" },
-    enrollments: new Array(3100),
-  },
-  {
-    id: 4,
-    title: "Data Structures & Algorithms",
-    description: "Crack coding interviews with deep dives into arrays, trees, graphs and dynamic programming.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80",
-    published: true,
-    free: false,
-    totalLessons: 76,
-    totalDuration: 2880,
-    level: "INTERMEDIATE",
-    createdAt: "2024-09-15T09:00:00",
-    instructor: { id: 4, firstName: "Omar", lastName: "Fathy" },
-    category: { id: 4, name: "Computer Science" },
-    enrollments: new Array(2050),
-  },
-  {
-    id: 5,
-    title: "Machine Learning with Python",
-    description: "From linear regression to neural networks — build real ML models with scikit-learn and TensorFlow.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80",
-    published: true,
-    free: false,
-    totalLessons: 61,
-    totalDuration: 2460,
-    level: "ADVANCED",
-    createdAt: "2024-08-20T09:00:00",
-    instructor: { id: 5, firstName: "Layla", lastName: "Morsi" },
-    category: { id: 5, name: "Data Science" },
-    enrollments: new Array(1580),
-  },
-  {
-    id: 6,
-    title: "Git & GitHub for Teams",
-    description: "Version control, branching strategies, pull requests, CI/CD basics and team workflows.",
-    thumbnailUrl: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80",
-    published: true,
-    free: true,
-    totalLessons: 18,
-    totalDuration: 420,
-    level: "BEGINNER",
-    createdAt: "2025-01-08T09:00:00",
-    instructor: { id: 1, firstName: "Sara", lastName: "Ahmed" },
-    category: { id: 1, name: "Web Development" },
-    enrollments: new Array(4200),
-  },
-];
+// const MOCK_COURSES = [
+//   {
+//     id: 1,
+//     title: "React from Zero to Hero",
+//     description: "Master modern React with hooks, context, and real-world project patterns that scale.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&q=80",
+//     published: true,
+//     free: false,
+//     totalLessons: 42,
+//     totalDuration: 1380,
+//     level: "BEGINNER",
+//     createdAt: "2024-11-10T09:00:00",
+//     instructor: { id: 1, firstName: "Sara", lastName: "Ahmed" },
+//     category: { id: 1, name: "Web Development" },
+//     enrollments: new Array(1240),
+//   },
+//   {
+//     id: 2,
+//     title: "Spring Boot & Microservices",
+//     description: "Build production-grade Java microservices with Spring Boot, Docker, and Kubernetes.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&q=80",
+//     published: true,
+//     free: false,
+//     totalLessons: 58,
+//     totalDuration: 2100,
+//     level: "ADVANCED",
+//     createdAt: "2024-10-01T09:00:00",
+//     instructor: { id: 2, firstName: "Karim", lastName: "Hassan" },
+//     category: { id: 2, name: "Backend" },
+//     enrollments: new Array(870),
+//   },
+//   {
+//     id: 3,
+//     title: "UI/UX Design Fundamentals",
+//     description: "Learn design thinking, Figma, user research, and prototyping from scratch.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80",
+//     published: true,
+//     free: true,
+//     totalLessons: 24,
+//     totalDuration: 720,
+//     level: "BEGINNER",
+//     createdAt: "2024-12-05T09:00:00",
+//     instructor: { id: 3, firstName: "Nour", lastName: "El-Sayed" },
+//     category: { id: 3, name: "Design" },
+//     enrollments: new Array(3100),
+//   },
+//   {
+//     id: 4,
+//     title: "Data Structures & Algorithms",
+//     description: "Crack coding interviews with deep dives into arrays, trees, graphs and dynamic programming.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80",
+//     published: true,
+//     free: false,
+//     totalLessons: 76,
+//     totalDuration: 2880,
+//     level: "INTERMEDIATE",
+//     createdAt: "2024-09-15T09:00:00",
+//     instructor: { id: 4, firstName: "Omar", lastName: "Fathy" },
+//     category: { id: 4, name: "Computer Science" },
+//     enrollments: new Array(2050),
+//   },
+//   {
+//     id: 5,
+//     title: "Machine Learning with Python",
+//     description: "From linear regression to neural networks — build real ML models with scikit-learn and TensorFlow.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80",
+//     published: true,
+//     free: false,
+//     totalLessons: 61,
+//     totalDuration: 2460,
+//     level: "ADVANCED",
+//     createdAt: "2024-08-20T09:00:00",
+//     instructor: { id: 5, firstName: "Layla", lastName: "Morsi" },
+//     category: { id: 5, name: "Data Science" },
+//     enrollments: new Array(1580),
+//   },
+//   {
+//     id: 6,
+//     title: "Git & GitHub for Teams",
+//     description: "Version control, branching strategies, pull requests, CI/CD basics and team workflows.",
+//     thumbnailUrl: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80",
+//     published: true,
+//     free: true,
+//     totalLessons: 18,
+//     totalDuration: 420,
+//     level: "BEGINNER",
+//     createdAt: "2025-01-08T09:00:00",
+//     instructor: { id: 1, firstName: "Sara", lastName: "Ahmed" },
+//     category: { id: 1, name: "Web Development" },
+//     enrollments: new Array(4200),
+//   },
+// ];
+
+
+const token = localStorage.getItem("token")
 
 const CATEGORIES = ["All", "Web Development", "Backend", "Design", "Computer Science", "Data Science"];
-const LEVELS     = ["All", "BEGINNER", "INTERMEDIATE", "ADVANCED"];
+const LEVELS = ["All", "BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
 function formatDuration(minutes) {
   const h = Math.floor(minutes / 60);
@@ -108,9 +113,9 @@ function formatCount(n) {
 }
 
 const LEVEL_LABEL = {
-  BEGINNER:     "Beginner",
+  BEGINNER: "Beginner",
   INTERMEDIATE: "Intermediate",
-  ADVANCED:     "Advanced",
+  ADVANCED: "Advanced",
 };
 
 function CourseCard({ course }) {
@@ -153,7 +158,12 @@ function CourseCard({ course }) {
         </div>
 
         <div className="course-card__footer">
-          <Link  className="btn-enroll db-btn-continue" to="/student/details"  > 
+
+
+          <Link
+            className="btn-enroll db-btn-continue"
+            to={`/student/details/${course.id}`}
+          >
             {course.free ? "Enroll Free" : "View Course"}
           </Link>
         </div>
@@ -163,20 +173,98 @@ function CourseCard({ course }) {
 }
 
 export default function CourseCatalog() {
-  const [search,   setSearch]   = useState("");
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [level,    setLevel]    = useState("All");
+  const [level, setLevel] = useState("All");
   const [freeOnly, setFreeOnly] = useState(false);
 
+
+  const [courses, setCourses] = useState([]);
+
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:8080/api/courses",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const formatted = res.data.map((c) => ({
+          id: c.id,
+          title: c.title || "",
+          description: c.description || "",
+          thumbnailUrl: `http://localhost:8080/${c.thumbnailUrl}`,
+          free: c.free,
+          totalLessons: c.totalLessons || 0,
+          totalDuration: c.totalDuration || 0,
+          level: c.level || "BEGINNER",
+
+          instructor: {
+            firstName: c.instructorName?.split(" ")[0] || "Unknown",
+            lastName: c.instructorName?.split(" ")[1] || "",
+          },
+
+          category: {
+            name: c.categoryName || "Unknown",
+          },
+
+          enrollments: [],
+        }));
+
+        setCourses(formatted);
+      } catch (err) {
+        console.log("Error fetching courses:", err);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+
+  // const filtered = useMemo(() => {
+  //   return courses.filter((c) => {
+  //     if (search && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
+  //     if (category !== "All" && c.category.name !== category) return false;
+  //     if (level !== "All" && c.level !== level) return false;
+  //     if (freeOnly && !c.free) return false;
+  //     return true;
+  //   });
+  // }, [search, category, level, freeOnly]);
+
+
   const filtered = useMemo(() => {
-    return MOCK_COURSES.filter((c) => {
-      if (search   && !c.title.toLowerCase().includes(search.toLowerCase())) return false;
-      if (category !== "All" && c.category.name !== category)                return false;
-      if (level    !== "All" && c.level !== level)                           return false;
-      if (freeOnly && !c.free)                                               return false;
-      return true;
+    return courses.filter((c) => {
+      const keyword = search.trim().toLowerCase();
+
+      const matchesSearch =
+        c.title.toLowerCase().includes(keyword) ||
+        `${c.instructor.firstName} ${c.instructor.lastName}`
+          .toLowerCase()
+          .includes(keyword) ||
+        c.category.name.toLowerCase().includes(keyword);
+
+      const matchesCategory =
+        category === "All" || c.category.name === category;
+
+      const matchesLevel =
+        level === "All" || c.level === level;
+
+      const matchesFree =
+        !freeOnly || c.free === true;
+
+      return (
+        (!search || matchesSearch) &&
+        matchesCategory &&
+        matchesLevel &&
+        matchesFree
+      );
     });
-  }, [search, category, level, freeOnly]);
+  }, [courses, search, category, level, freeOnly]);
+
 
   return (
     <div className="cd-page">

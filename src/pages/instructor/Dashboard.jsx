@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./instructor.css";
+import axios from "axios";
+
+
+
 
 /* ─────────────────────────────────────────
    ROLE GUARD
@@ -10,7 +14,7 @@ function AccessDenied() {
   return (
     <div className="ins-denied">
       <div className="ins-denied__card">
-        <div className="ins-denied__icon">🔒</div>
+        <div className="ins-denied__icon"></div>
         <h2 className="ins-denied__title">Access Restricted</h2>
         <p className="ins-denied__msg">
           This area is only available to <strong>Instructors</strong>.
@@ -34,7 +38,7 @@ function AccessDenied() {
 ───────────────────────────────────────── */
 
 // const curentUser = JSON.parse(localStorage.getItem ('user')) 
-const MOCK_INSTRUCTOR = 
+const MOCK_INSTRUCTOR =
 {
   id: 2,
   firstName: "Sara",
@@ -89,24 +93,24 @@ const MOCK_COURSES = [
 
 const MOCK_STUDENTS = [
   { id: 1, firstName: "Youssef", lastName: "Zienhoum", email: "youssef@mail.com", course: "React from Zero to Hero", progress: 100, grade: 91.5, enrolledAt: "2025-02-01" },
-  { id: 2, firstName: "Nour",    lastName: "Hassan",   email: "nour@mail.com",    course: "React from Zero to Hero", progress: 68,  grade: null, enrolledAt: "2025-02-10" },
-  { id: 3, firstName: "Ahmed",   lastName: "Tarek",    email: "ahmed@mail.com",   course: "Advanced TypeScript Patterns", progress: 45, grade: null, enrolledAt: "2025-03-05" },
-  { id: 4, firstName: "Lina",    lastName: "Mostafa",  email: "lina@mail.com",    course: "React from Zero to Hero", progress: 82, grade: null, enrolledAt: "2025-03-12" },
-  { id: 5, firstName: "Omar",    lastName: "Fathy",    email: "omar@mail.com",    course: "Advanced TypeScript Patterns", progress: 91, grade: 88, enrolledAt: "2025-01-20" },
+  { id: 2, firstName: "Nour", lastName: "Hassan", email: "nour@mail.com", course: "React from Zero to Hero", progress: 68, grade: null, enrolledAt: "2025-02-10" },
+  { id: 3, firstName: "Ahmed", lastName: "Tarek", email: "ahmed@mail.com", course: "Advanced TypeScript Patterns", progress: 45, grade: null, enrolledAt: "2025-03-05" },
+  { id: 4, firstName: "Lina", lastName: "Mostafa", email: "lina@mail.com", course: "React from Zero to Hero", progress: 82, grade: null, enrolledAt: "2025-03-12" },
+  { id: 5, firstName: "Omar", lastName: "Fathy", email: "omar@mail.com", course: "Advanced TypeScript Patterns", progress: 91, grade: 88, enrolledAt: "2025-01-20" },
 ];
 
 const RECENT_ACTIVITY = [
-  { id: 1, type: "enrollment", text: "Nour Hassan enrolled in React from Zero to Hero",        time: "2h ago" },
-  { id: 2, type: "review",     text: "New 5 review on React from Zero to Hero",              time: "5h ago" },
-  { id: 3, type: "question",   text: "Ahmed Tarek asked a question in TypeScript Patterns",    time: "1d ago" },
-  { id: 4, type: "completion", text: "Youssef Zienhoum completed React from Zero to Hero",    time: "2d ago" },
-  { id: 5, type: "enrollment", text: "Omar Fathy enrolled in Advanced TypeScript Patterns",    time: "3d ago" },
+  { id: 1, type: "enrollment", text: "Nour Hassan enrolled in React from Zero to Hero", time: "2h ago" },
+  { id: 2, type: "review", text: "New 5 review on React from Zero to Hero", time: "5h ago" },
+  { id: 3, type: "question", text: "Ahmed Tarek asked a question in TypeScript Patterns", time: "1d ago" },
+  { id: 4, type: "completion", text: "Youssef Zienhoum completed React from Zero to Hero", time: "2d ago" },
+  { id: 5, type: "enrollment", text: "Omar Fathy enrolled in Advanced TypeScript Patterns", time: "3d ago" },
 ];
 
 const ACTIVITY_ICON = {
   enrollment: "",
-  review:     "",
-  question:   "",
+  review: "",
+  question: "",
   completion: "",
 };
 
@@ -122,9 +126,9 @@ function formatK(n) {
 }
 
 const LEVEL_STYLE = {
-  BEGINNER:     { color: "#15803d", bg: "#dcfce7" },
+  BEGINNER: { color: "#15803d", bg: "#dcfce7" },
   INTERMEDIATE: { color: "#92400e", bg: "#fef3c7" },
-  ADVANCED:     { color: "#991b1b", bg: "#fee2e2" },
+  ADVANCED: { color: "#991b1b", bg: "#fee2e2" },
 };
 
 /* ─────────────────────────────────────────
@@ -132,6 +136,9 @@ const LEVEL_STYLE = {
 ───────────────────────────────────────── */
 function CourseCard({ course, navigate }) {
   const lvl = LEVEL_STYLE[course.level] || LEVEL_STYLE.BEGINNER;
+
+
+
 
   return (
     <div className="ins-course-card">
@@ -146,13 +153,16 @@ function CourseCard({ course, navigate }) {
 
       <div className="ins-course-card__body">
         <div className="ins-course-card__top">
-          <span className="ins-course-card__cat">{course.category.name}</span>
-          <span
+          <span className="ins-course-card__cat">
+            {typeof course.category === "object"
+              ? course.category.name
+              : course.category}</span>
+          {/* <span
             className="ins-course-card__level"
             style={{ background: lvl.bg, color: lvl.color }}
           >
             {course.level.charAt(0) + course.level.slice(1).toLowerCase()}
-          </span>
+          </span> */}
         </div>
 
         <h3 className="ins-course-card__title">{course.title}</h3>
@@ -207,7 +217,7 @@ function CourseCard({ course, navigate }) {
 function StudentRow({ student }) {
   const progressColor =
     student.progress >= 80 ? "#15803d" :
-    student.progress >= 50 ? "#92400e" : "#991b1b";
+      student.progress >= 50 ? "#92400e" : "#991b1b";
 
   return (
     <tr className="ins-student-row">
@@ -255,12 +265,15 @@ function StudentRow({ student }) {
    MAIN DASHBOARD
 ───────────────────────────────────────── */
 export default function Dashboard() {
+  const [courses, setCourses] = useState([])
+
   const navigate = useNavigate();
 
   /* ── ROLE GUARD ── */
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
   const role = currentUser?.role?.toUpperCase();
-
+  const token = localStorage.getItem("token");
+  const instructorId = currentUser?.id;
   if (!currentUser || role !== "INSTRUCTOR") {
     return <AccessDenied />; /// عايز اعمله في فولدر لوحده 
   }
@@ -268,18 +281,18 @@ export default function Dashboard() {
   /* Use real user name from localStorage if available, else mock */
   const user = {
     // ...MOCK_INSTRUCTOR,ظ
-    firstName: currentUser.firstname ,
-    lastName:  currentUser.lastname  ,
-    email:     currentUser.email    
+    firstName: currentUser.firstname,
+    lastName: currentUser.lastname,
+    email: currentUser.email
   };
 
-  const totalStudents  = MOCK_STUDENTS.length;
-  const totalRevenue   = MOCK_COURSES.reduce((s, c) => s + c.revenue, 0);
-  const totalCourses   = MOCK_COURSES.length;
-  const publishedCount = MOCK_COURSES.filter((c) => c.published).length;
-  const avgRating      = (
-    MOCK_COURSES.filter((c) => c.avgRating).reduce((s, c) => s + c.avgRating, 0) /
-    MOCK_COURSES.filter((c) => c.avgRating).length
+  const totalStudents = MOCK_STUDENTS.length;
+  const totalRevenue = courses.reduce((s, c) => s + c.revenue, 0);
+  const totalCourses = courses.length;
+  const publishedCount = courses.filter((c) => c.published).length;
+  const avgRating = (
+    courses.filter((c) => c.avgRating).reduce((s, c) => s + c.avgRating, 0) /
+    courses.filter((c) => c.avgRating).length
   ).toFixed(1);
 
   const [studentSearch, setStudentSearch] = useState("");
@@ -289,6 +302,31 @@ export default function Dashboard() {
       .toLowerCase()
       .includes(studentSearch.toLowerCase())
   );
+
+
+
+
+  const fetchCourses = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8080/api/courses/my-courses/${instructorId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCourses(
+        (Array.isArray(res.data) ? res.data : []).map((c) => ({
+          ...c,
+          published: !!c.published,
+          free: !!c.free,
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+      setCourses([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses()
+ },[token, instructorId])
 
   return (
     <div className="ins-page">
@@ -329,13 +367,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-{/* ////////////////////////////////////////////////////// */}
+      {/* ////////////////////////////////////////////////////// */}
       <div className="ins-body">
 
         {/* ── Left column ── */}
         <div className="ins-col ins-col--main">
 
-{/* //////////////////////////// */}
+          {/* //////////////////////////// */}
           <section className="ins-section">
             <div className="ins-section__header">
               <div>
@@ -354,7 +392,7 @@ export default function Dashboard() {
             </div>
 
             <div className="ins-courses-grid">
-              {MOCK_COURSES.map((c) => (
+              {courses.map((c) => (
                 <CourseCard key={c.id} course={c} navigate={navigate} />
               ))}
 
@@ -420,8 +458,8 @@ export default function Dashboard() {
                 <tbody>
                   {filteredStudents.length > 0
                     ? filteredStudents.map((s) => (
-                        <StudentRow key={s.id} student={s} />
-                      ))
+                      <StudentRow key={s.id} student={s} />
+                    ))
                     : (
                       <tr>
                         <td colSpan={5} className="ins-table__empty">
@@ -476,65 +514,16 @@ export default function Dashboard() {
               </button>
               <button
                 className="ins-quick-btn"
-                onClick={() => navigate("/instructor/analytics")}
+                onClick={() => navigate("/instructor/edit")}
               >
                 <span className="ins-quick-btn__icon">📊</span>
-                <span>Analytics</span>
+                <span>edit courses </span>
               </button>
-              <button
-                className="ins-quick-btn"
-                onClick={() => navigate("/instructor/forum")}
-              >
-                <span className="ins-quick-btn__icon">💬</span>
-                <span>Forum Q&A</span>
-              </button>
+
             </div>
           </div>
 
-          {/* Recent activity */}
-          <div className="ins-sidebar-card">
-            <h3 className="ins-sidebar-card__title">Recent Activity</h3>
-            <div className="ins-activity-list">
-              {RECENT_ACTIVITY.map((item) => (
-                <div key={item.id} className="ins-activity-item">
-                  <span className="ins-activity-item__icon">
-                    {ACTIVITY_ICON[item.type]}
-                  </span>
-                  <div className="ins-activity-item__body">
-                    <p className="ins-activity-item__text">{item.text}</p>
-                    <p className="ins-activity-item__time">{item.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Course performance summary */}
-          <div className="ins-sidebar-card">
-            <h3 className="ins-sidebar-card__title">Course Performance</h3>
-            <div className="ins-perf-list">
-              {MOCK_COURSES.filter((c) => c.published).map((c) => (
-                <div key={c.id} className="ins-perf-item">
-                  <div className="ins-perf-item__top">
-                    <span className="ins-perf-item__title">{c.title}</span>
-                    <span className="ins-perf-item__pct">{c.completionRate}%</span>
-                  </div>
-                  <div className="ins-comp-bar ins-comp-bar--sm">
-                    <div
-                      className="ins-comp-bar__fill"
-                      style={{ width: `${c.completionRate}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              className="ins-btn-ghost ins-btn-ghost--block"
-              onClick={() => navigate("/instructor/analytics")}
-            >
-              View Full Analytics →
-            </button>
-          </div>
 
         </aside>
       </div>

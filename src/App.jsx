@@ -11,8 +11,8 @@ import Dashboard from "./pages/Student/Dashboard";
 import CourseCatalog from "./pages/Student/CourseCatalog";
 import CoursePlayer from "./pages/Student/CoursePlayer";
 import Quiz from "./pages/Student/Quiz";
-import QuizResult from "./pages/Student/Assigmnent";
-import Grandes from "./pages/Student/QuizResult";
+import QuizResult from "./pages/Student/QuizResult";
+import Grandes from "./pages/Student/Grandes";
 import Assigmnent from "./pages/Student/Assigmnent";
 import Forum from "./pages/Student/Forum";
 import Certificate from "./pages/Student/Certificate";
@@ -146,12 +146,13 @@ const handleLogout = () => {
         <Route path="/student/dashboard" element={<Dashboard />} />
         <Route path="/student/courses" element={<CourseCatalog />} />
         <Route path="/student/player" element={<CoursePlayer />} />
-        <Route path="/student/details" element={<CourseDetails />} />
+        {/* <Route path="/student/details" element={<CourseDetails />} /> */}
+        <Route path="/student/details/:courseId" element={<CourseDetails />} />
         <Route path="/student/quiz" element={<Quiz />} />
         <Route path="/student/results" element={<QuizResult />} />
-        <Route path="/student/assignments" element={<Assigmnent />} />
+        {/* <Route path="/student/assignments" element={<Assigmnent />} /> */}
         <Route path="/student/grades" element={<Grandes />} />
-        <Route path="/student/forum" element={<Forum />} />
+        {/* <Route path="/student/forum" element={<Forum />} /> */}
         <Route path="/student/certificate" element={<Certificate />} />
       </Route>
 
@@ -161,17 +162,17 @@ const handleLogout = () => {
         <Route path="/instructor/curriculum" element={<Curriculum />} />
         <Route path="/instructor/edit" element={<EditCourse />} />
         <Route path="/instructor/students" element={<StudentList />} />
-        <Route path="/instructor/analytics" element={<CourseAnalytics />} />
-        <Route path="/instructor/forum" element={<ForumIns />} />
+        {/* <Route path="/instructor/analytics" element={<CourseAnalytics />} /> */}
+        {/* <Route path="/instructor/forum" element={<ForumIns />} /> */}
       </Route>
 
       <Route element={<ProtectedLayout allowedRoles={["admin"]} onLogout={handleLogout} />}>
         <Route path="/admin/dashboard" element={<DashboardAdm />} />
         <Route path="/admin/users" element={<Usermanagement />} />
         <Route path="/admin/approvals" element={<InstructorApprovals />} />
-        <Route path="/admin/courses" element={<CourseManagement />} />
+        {/* <Route path="/admin/courses" element={<CourseManagement />} /> */}
         <Route path="/admin/categories" element={<Categories_Tags />} />
-        <Route path="/admin/reports" element={<Reports />} />
+        {/* <Route path="/admin/reports" element={<Reports />} /> */}
       </Route>
 
       <Route path="*" element={<NotFound />} />

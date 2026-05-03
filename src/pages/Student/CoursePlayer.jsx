@@ -1,24 +1,6 @@
-import React, { useState, useRef } from "react";
-// import "./pages.css";
-
-/* ── Mock data ── */
-const MOCK_LESSONS = [
-  { id: 1, title: "Introduction & Environment Setup",   duration: 18, lessonOrder: 1, preview: true,  completed: true,  videoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA", quizzes: [] },
-  { id: 2, title: "JSX & Component Basics",             duration: 24, lessonOrder: 2, preview: false, completed: true,  videoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA", quizzes: [{ id: 1, title: "JSX Quiz" }] },
-  { id: 3, title: "Props & State",                      duration: 32, lessonOrder: 3, preview: false, completed: true,  videoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA", quizzes: [] },
-  { id: 4, title: "useEffect & Side Effects",           duration: 41, lessonOrder: 4, preview: false, completed: false, videoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA", quizzes: [{ id: 2, title: "Hooks Quiz" }] },
-  { id: 5, title: "Context API & Global State",         duration: 38, lessonOrder: 5, preview: false, completed: false, videoUrl: null, quizzes: [] },
-  { id: 6, title: "React Router v6",                    duration: 45, lessonOrder: 6, preview: false, completed: false, videoUrl: null, quizzes: [] },
-  { id: 7, title: "Performance Optimization",           duration: 36, lessonOrder: 7, preview: false, completed: false, videoUrl: null, quizzes: [] },
-  { id: 8, title: "Final Project — Build a Full App",   duration: 86, lessonOrder: 8, preview: false, completed: false, videoUrl: null, quizzes: [] },
-];
-
-const MOCK_COURSE = {
-  id: 1,
-  title: "React from Zero to Hero",
-  instructor: { firstName: "Sara", lastName: "Ahmed" },
-  totalLessons: 8,
-};
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import axios from "axios";
 
 function fmtDuration(min) {
   const h = Math.floor(min / 60);
@@ -29,55 +11,107 @@ function fmtDuration(min) {
 const TABS = ["Overview", "Resources", "Q&A", "Notes"];
 
 export default function CoursePlayer() {
-  const [lessons, setLessons]     = useState(MOCK_LESSONS);
-  const [currentId, setCurrentId] = useState(4); // start on first incomplete
+  const [searchParams] = useSearchParams();
+  const courseId = searchParams.get("course");
+
+  const [course, setCourse] = useState(null);
+  const [lessons, setLessons] = useState([]);
+  const [currentId, setCurrentId] = useState(null);
   const [activeTab, setActiveTab] = useState("Overview");
-  const [notes, setNotes]         = useState("");
+  const [notes, setNotes] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const current = lessons.find((l) => l.id === currentId);
-  const completedCount = lessons.filter((l) => l.completed).length;
-  const progressPct = Math.round((completedCount / lessons.length) * 100);
+  const token = localStorage.getItem("token");
 
-  const markComplete = (id) => {
-    setLessons((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, completed: true } : l))
-    );
-  };
+  useEffect(() => {
+    if (!courseId) return;
+
+    const fetchCourseDetails = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:8080/api/courses/${courseId}/details`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const courseData = res.data;
+        console.log(res.data);
+
+        setCourse(courseData);
+        setLessons(courseData.lessons || []);
+
+        if (courseData.lessons?.length > 0) {
+          setCurrentId(courseData.lessons[0].id);
+        }
+      } catch (error) {
+        console.log("Error fetching course details:", error);
+      }
+    };
+
+    fetchCourseDetails();
+  }, [courseId, token]);
+
+  const current = lessons.find((lesson) => lesson.id === currentId);
+
+  const completedCount = 0;
+  const progressPct =
+    lessons.length > 0
+      ? Math.round((completedCount / lessons.length) * 100)
+      : 0;
 
   const goNext = () => {
-    const idx = lessons.findIndex((l) => l.id === currentId);
-    if (idx < lessons.length - 1) setCurrentId(lessons[idx + 1].id);
+    const currentIndex = lessons.findIndex(
+      (lesson) => lesson.id === currentId
+    );
+    if (currentIndex < lessons.length - 1) {
+      setCurrentId(lessons[currentIndex + 1].id);
+    }
   };
 
   const goPrev = () => {
-    const idx = lessons.findIndex((l) => l.id === currentId);
-    if (idx > 0) setCurrentId(lessons[idx - 1].id);
+    const currentIndex = lessons.findIndex(
+      (lesson) => lesson.id === currentId
+    );
+    if (currentIndex > 0) {
+      setCurrentId(lessons[currentIndex - 1].id);
+    }
   };
+
+  const handleQuizNavigation = () => {
+    if (!current?.id) return;
+    window.location.href = `/student/quiz?courseId=${courseId}&lessonId=${current.id}`;
+  };
+
+  // ✅ زر الـ Final Exam — بيوديك لنفس صفحة الكويز بس بدون lessonId
+  const handleExamNavigation = () => {
+    if (!courseId) return;
+    window.location.href = `/student/quiz?courseId=${courseId}`;
+  };
+
+  if (!course) return <p>Loading...</p>;
 
   return (
     <div className="player-page">
       {/* ── Top bar ── */}
       <div className="player-topbar">
         <div className="player-topbar__left">
-          <button className="player-back-btn" onClick={() => window.history.back()}>
+          <button
+            className="player-back-btn"
+            onClick={() => window.history.back()}
+          >
             ← Back
           </button>
+
           <div>
-            <p className="player-topbar__course">{MOCK_COURSE.title}</p>
+            <p className="player-topbar__course">{course.title}</p>
             <p className="player-topbar__lesson">{current?.title}</p>
           </div>
         </div>
+
         <div className="player-topbar__right">
-          <div className="player-progress-pill">
-            <div
-              className="player-progress-pill__fill"
-              style={{ width: `${progressPct}%` }}
-            />
-            <span className="player-progress-pill__label">
-              {completedCount}/{lessons.length} lessons · {progressPct}%
-            </span>
-          </div>
           <button
             className="player-sidebar-toggle"
             onClick={() => setSidebarOpen((v) => !v)}
@@ -94,9 +128,9 @@ export default function CoursePlayer() {
         <div className="player-main">
           {/* Video area */}
           <div className="player-video-wrap">
-            {current?.videoUrl ? (
+            {current?.video_url ? (
               <iframe
-                src={current.videoUrl}
+                src={current.video_url}
                 title={current.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
                 allowFullScreen
@@ -113,42 +147,44 @@ export default function CoursePlayer() {
           {/* Video controls bar */}
           <div className="player-controls">
             <div className="player-controls__left">
-              <button className="player-ctrl-btn" onClick={goPrev} disabled={currentId === lessons[0].id}>
+              <button
+                className="player-ctrl-btn"
+                onClick={goPrev}
+                disabled={currentId === lessons[0]?.id}
+              >
                 ← Prev
               </button>
-              <button className="player-ctrl-btn player-ctrl-btn--next" onClick={goNext} disabled={currentId === lessons[lessons.length - 1].id}>
+
+              <button
+                className="player-ctrl-btn player-ctrl-btn--next"
+                onClick={goNext}
+                disabled={currentId === lessons[lessons.length - 1]?.id}
+              >
                 Next →
               </button>
             </div>
+
+            {/* ✅ الزرين جنب بعض — Take Quiz و Final Exam */}
             <div className="player-controls__right">
-              {!current?.completed && (
-                <button
-                  className="player-complete-btn"
-                  onClick={() => markComplete(currentId)}
-                >
-                  ✓ Mark as Complete
-                </button>
-              )}
-              {current?.completed && (
-                <span className="player-completed-badge">✓ Completed</span>
-              )}
-              {current?.quizzes?.length > 0 && (
-                <a href={`/student/quiz?quiz=${current.quizzes[0].id}`} className="player-quiz-btn">
-                  📝 Take Quiz
-                </a>
-              )}
+              <button className="player-quiz-btn" onClick={handleQuizNavigation}>
+                📝 Take Quiz
+              </button>
+
+              <button className="player-quiz-btn" onClick={handleExamNavigation}>
+                🎓 Final Exam
+              </button>
             </div>
           </div>
 
           {/* ── Tabs ── */}
           <div className="player-tabs">
-            {TABS.map((t) => (
+            {TABS.map((tab) => (
               <button
-                key={t}
-                className={`player-tab ${activeTab === t ? "player-tab--active" : ""}`}
-                onClick={() => setActiveTab(t)}
+                key={tab}
+                className={`player-tab ${activeTab === tab ? "player-tab--active" : ""}`}
+                onClick={() => setActiveTab(tab)}
               >
-                {t}
+                {tab}
               </button>
             ))}
           </div>
@@ -157,36 +193,32 @@ export default function CoursePlayer() {
             {activeTab === "Overview" && (
               <div className="player-overview">
                 <h2 className="player-overview__title">{current?.title}</h2>
+
                 <p className="player-overview__meta">
-                  ⏱ {fmtDuration(current?.duration)} &nbsp;·&nbsp;
-                  Lesson {current?.lessonOrder} of {lessons.length} &nbsp;·&nbsp;
+                  ⏱ {fmtDuration(current?.duration || 0)}
+                  &nbsp;·&nbsp;
+                  Lesson {current?.lessonOrder} of {lessons.length}
+                  &nbsp;·&nbsp;
                   {current?.preview ? "Free Preview" : "Enrolled"}
                 </p>
+
                 <p className="player-overview__desc">
-                  In this lesson you'll build a solid understanding of the core concepts.
-                  Follow along with the code examples and pause whenever you need to.
+                  {current?.description || "No description available"}
                 </p>
               </div>
             )}
 
             {activeTab === "Resources" && (
               <div className="player-resources">
-                <div className="player-resource-item">
-                  <span className="resource-icon">📄</span>
-                  <span>Lesson slides.pdf</span>
-                  <a href="#" className="resource-dl">Download</a>
-                </div>
-                <div className="player-resource-item">
-                  <span className="resource-icon">💾</span>
-                  <span>Starter code.zip</span>
-                  <a href="#" className="resource-dl">Download</a>
-                </div>
+                <p>No resources available</p>
               </div>
             )}
 
             {activeTab === "Q&A" && (
               <div className="player-qa">
-                <p className="player-qa__empty">No questions yet. Be the first to ask!</p>
+                <p className="player-qa__empty">
+                  No questions yet. Be the first to ask!
+                </p>
                 <button className="player-qa__ask">Ask a Question</button>
               </div>
             )}
@@ -216,30 +248,30 @@ export default function CoursePlayer() {
           <aside className="player-sidebar">
             <div className="player-sidebar__header">
               <span>Curriculum</span>
-              <span className="player-sidebar__prog">{progressPct}% complete</span>
             </div>
+
             <div className="player-sidebar__list">
               {lessons.map((lesson) => {
                 const active = lesson.id === currentId;
+
                 return (
                   <button
                     key={lesson.id}
-                    className={`player-sidebar__item
-                      ${active ? "player-sidebar__item--active" : ""}
-                      ${lesson.completed ? "player-sidebar__item--done" : ""}
-                    `}
+                    className={`player-sidebar__item ${active ? "player-sidebar__item--active" : ""}`}
                     onClick={() => setCurrentId(lesson.id)}
                   >
-                    <span className={`player-sidebar__dot ${lesson.completed ? "dot--done" : ""} ${active ? "dot--active" : ""}`}>
-                      {lesson.completed ? "✓" : lesson.lessonOrder}
+                    <span className="player-sidebar__dot">
+                      {lesson.lessonOrder}
                     </span>
+
                     <span className="player-sidebar__item-info">
-                      <span className="player-sidebar__item-title">{lesson.title}</span>
-                      <span className="player-sidebar__item-dur">{fmtDuration(lesson.duration)}</span>
+                      <span className="player-sidebar__item-title">
+                        {lesson.title}
+                      </span>
+                      <span className="player-sidebar__item-dur">
+                        {fmtDuration(lesson.duration)}
+                      </span>
                     </span>
-                    {lesson.quizzes?.length > 0 && (
-                      <span className="player-sidebar__quiz-dot" title="Has quiz">📝</span>
-                    )}
                   </button>
                 );
               })}

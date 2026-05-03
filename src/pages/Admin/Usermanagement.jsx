@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, {useEffect, useState, useMemo } from "react";
 import "./admin.css";
-
+import axios from "axios";
 /* ─────────────────────────────────────────
    MOCK DATA
    GET    /admin/users?page=&q=&role=&status=
@@ -131,7 +131,8 @@ function UserDrawer({ user, onClose, onUpdate, onDelete }) {
 
 
 export default function Usermanagement() {
-  const [users,        setUsers]        = useState(INIT_USERS);
+  const token = localStorage.getItem("token")
+  const [users,        setUsers]        = useState([]);
   const [search,       setSearch]       = useState("");
   const [roleFilter,   setRoleFilter]   = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -141,18 +142,60 @@ export default function Usermanagement() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
 
-  const updateUser = (id, patch) => {
-    /* PATCH /admin/users/:id */
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...patch } : u)));
-    if (selected?.id === id) setSelected((p) => ({ ...p, ...patch }));
-    showToast("User updated.");
-  };
+const updateUser = async (id, patch) => {
+  try {
+    if (patch.hasOwnProperty("active")) {
+      const endpoint = patch.active
+        ? `http://localhost:8080/api/admin/users/unblock/${id}`
+        : `http://localhost:8080/api/admin/users/block/${id}`;
 
-  const deleteUser = (id) => {
-    /* DELETE /admin/users/:id */
+      await axios.put(endpoint, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+
+    if (patch.hasOwnProperty("role")) {
+      await axios.put(
+        `http://localhost:8080/api/admin/users/role/${id}`,
+        { role: patch.role },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, ...patch } : u))
+    );
+
+    showToast("User updated.");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const deleteUser = async (id) => {
+  try {
+    await axios.delete(
+      ` http://localhost:8080/api/admin/users/delete/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     setUsers((prev) => prev.filter((u) => u.id !== id));
+
     showToast("User deleted.");
-  };
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   /* Bulk actions */
   const [selected2, setSelected2] = useState(new Set());
@@ -168,6 +211,45 @@ export default function Usermanagement() {
     setSelected2(new Set());
     showToast(`${selected2.size} user(s) blocked.`);
   };
+
+
+
+useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:8080/api/admin/users", 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const formatted = res.data.map((u) => ({
+        id: u.id,
+        firstName: u.firstname,
+        lastName: u.lastname,
+        email: u.email,
+        role: u.role,
+        active: u.active,
+          createdAt: u.createdAt || new Date().toISOString(),
+  lastActive: u.lastActive || new Date().toISOString(),
+      }));
+
+      setUsers(formatted);
+
+    } catch (err) {
+      console.log("Error fetching users:", err);
+    }
+  };
+
+  console.log(token)
+
+  fetchUsers();
+}, []);
+
+
 
   const filtered = useMemo(() => {
     return users

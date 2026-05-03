@@ -1,42 +1,228 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-// import "./course-form.css";
 import "./instructor.css";
+import axios from "axios";
+import { useEffect } from "react";
 
-
-/* ─────────────────────────────────────────
-   ROLE GUARD
-───────────────────────────────────────── */
 const CATEGORIES = ["Web Development", "Backend", "Data Science", "Design", "DevOps", "Computer Science", "Mobile", "Other"];
-const LEVELS     = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
+const LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 const LEVEL_LABEL = { BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced" };
 
+const user = JSON.parse(localStorage.getItem("user"));
+const instructorId = user?.id;
 const STEPS = [
-  { id: 1, label: "Basics",     icon: "" },
-  { id: 2, label: "Media",      icon: "" },
-  { id: 3, label: "Pricing",    icon: ""},
-  { id: 4, label: "Publish",    icon: "" },
+  { id: 1, label: "Basics", icon: "" },
+  { id: 2, label: "Media", icon: "" },
+  { id: 3, label: "Pricing", icon: "" },
+  { id: 4, label: "Publish", icon: "" },
 ];
 
 const EMPTY_FORM = {
-  title:        "",
-  subtitle:     "",
-  description:  "",
-  category:     "",
-  level:        "BEGINNER",
-  language:     "English",
-  tags:         "",
+  title: "",
+  subtitle: "",
+  description: "",
+  category: "",
+  level: "BEGINNER",
+  language: "English",
+  tags: "",
   thumbnailFile: null,
   thumbnailPreview: null,
   promoVideoUrl: "",
-  price:        "",
-  isFree:       false,
-  published:    false,
+  price: "",
+  isFree: false,
+  published: false,
 };
 
-/* ─────────────────────────────────────────
-   STEP COMPONENTS
-───────────────────────────────────────── */
+const EMPTY_LESSON = {
+  title: "",
+  description: "",
+  videoUrl: "",
+  thumbnailUrl: "",
+  duration: "",
+  lessonOrder: "",
+  preview: false,
+};
+
+
+function AddLessonModal({ course, onClose, token }) {
+  const [lesson, setLesson] = useState(EMPTY_LESSON);
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const onChange = (key, value) => {
+    setLesson((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!lesson.title.trim()) e.title = "Title is required";
+    if (!lesson.description.trim()) e.description = "Description is required";
+    if (!lesson.videoUrl.trim()) e.videoUrl = "Video URL is required";
+    if (!lesson.duration) e.duration = "Duration is required";
+    if (!lesson.lessonOrder) e.lessonOrder = "Lesson order is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      await axios.post(
+        "http://localhost:8080/api/lessons/create",
+        {
+          title: lesson.title,
+          description: lesson.description,
+          videoUrl: lesson.videoUrl,
+          thumbnailUrl: lesson.thumbnailUrl || lesson.videoUrl,
+          duration: parseInt(lesson.duration),
+          lessonOrder: parseInt(lesson.lessonOrder),
+          instructorid: 6,
+          courseId: course.id,
+          Preview: lesson.preview,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      alert("Error creating lesson: " + (err.response?.data?.message || err.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="cf-overlay" onClick={onClose}>
+      <div className="cf-modal" onClick={(e) => e.stopPropagation()}>
+
+        <div className="cf-modal__header">
+          <div>
+            <p className="cf-modal__kicker">Course: {course.title}</p>
+            <h2 className="cf-modal__title"> Add New Lesson</h2>
+          </div>
+          <button className="cf-modal__close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="cf-modal__body">
+          <div className="cf-step-body">
+
+            <div className="cf-field">
+              <label className="cf-label">Lesson Title <span className="cf-required">*</span></label>
+              <input
+                className={`cf-input ${errors.title ? "cf-input--error" : ""}`}
+                placeholder="e.g. Introduction to Spring Boot"
+                value={lesson.title}
+                onChange={(e) => onChange("title", e.target.value)}
+              />
+              {errors.title && <p className="cf-error">{errors.title}</p>}
+            </div>
+
+            <div className="cf-field">
+              <label className="cf-label">Description <span className="cf-required">*</span></label>
+              <textarea
+                className={`cf-textarea ${errors.description ? "cf-input--error" : ""}`}
+                placeholder="What will students learn in this lesson?"
+                rows={3}
+                value={lesson.description}
+                onChange={(e) => onChange("description", e.target.value)}
+              />
+              {errors.description && <p className="cf-error">{errors.description}</p>}
+            </div>
+
+            <div className="cf-field">
+              <label className="cf-label">Video URL <span className="cf-required">*</span></label>
+              <input
+                className={`cf-input ${errors.videoUrl ? "cf-input--error" : ""}`}
+                placeholder="https://youtube.com/watch?v=..."
+                value={lesson.videoUrl}
+                onChange={(e) => onChange("videoUrl", e.target.value)}
+              />
+              {errors.videoUrl && <p className="cf-error">{errors.videoUrl}</p>}
+            </div>
+
+            <div className="cf-field">
+              <label className="cf-label">Thumbnail URL</label>
+              <input
+                className="cf-input"
+                placeholder="https://example.com/images/thumb.png (optional)"
+                value={lesson.thumbnailUrl}
+                onChange={(e) => onChange("thumbnailUrl", e.target.value)}
+              />
+              <p className="cf-hint">Leave empty to use the video URL as fallback</p>
+            </div>
+
+            <div className="cf-row">
+              <div className="cf-field">
+                <label className="cf-label">Duration (minutes) <span className="cf-required">*</span></label>
+                <input
+                  type="number"
+                  className={`cf-input ${errors.duration ? "cf-input--error" : ""}`}
+                  placeholder="15"
+                  min="1"
+                  value={lesson.duration}
+                  onChange={(e) => onChange("duration", e.target.value)}
+                />
+                {errors.duration && <p className="cf-error">{errors.duration}</p>}
+              </div>
+
+              <div className="cf-field">
+                <label className="cf-label">Lesson Order <span className="cf-required">*</span></label>
+                <input
+                  type="number"
+                  className={`cf-input ${errors.lessonOrder ? "cf-input--error" : ""}`}
+                  placeholder="1"
+                  min="1"
+                  value={lesson.lessonOrder}
+                  onChange={(e) => onChange("lessonOrder", e.target.value)}
+                />
+                {errors.lessonOrder && <p className="cf-error">{errors.lessonOrder}</p>}
+              </div>
+            </div>
+
+            <div className="cf-field">
+              <label className="cf-label">Preview</label>
+              <div className="cf-publish-toggle-row">
+                <label className={`cf-publish-opt ${!lesson.preview ? "cf-publish-opt--active" : ""}`}>
+                  <input type="radio" name="preview" checked={!lesson.preview} onChange={() => onChange("preview", false)} style={{ display: "none" }} />
+                  <span> Members Only</span>
+                  <span className="cf-publish-opt__desc">Only enrolled students can watch</span>
+                </label>
+                <label className={`cf-publish-opt ${lesson.preview ? "cf-publish-opt--active" : ""}`}>
+                  <input type="radio" name="preview" checked={lesson.preview} onChange={() => onChange("preview", true)} style={{ display: "none" }} />
+                  <span>Free Preview</span>
+                  <span className="cf-publish-opt__desc">Anyone can watch this lesson</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div className="cf-modal__footer">
+          <button className="ins-btn-ghost" onClick={onClose}>Cancel</button>
+          <div style={{ flex: 1 }} />
+          <button
+            className="ins-btn-primary cf-save-btn"
+            onClick={handleSave}
+            disabled={saving || success}
+          >
+            {success ? "✓ Lesson Added!" : saving ? "Saving…" : "➕ Add Lesson"}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
 function StepBasics({ form, onChange, errors }) {
   return (
     <div className="cf-step-body">
@@ -114,15 +300,6 @@ function StepBasics({ form, onChange, errors }) {
             onChange={(e) => onChange("language", e.target.value)}
           />
         </div>
-        <div className="cf-field">
-          <label className="cf-label">Tags</label>
-          <input
-            className="cf-input"
-            placeholder="react, hooks, frontend (comma separated)"
-            value={form.tags}
-            onChange={(e) => onChange("tags", e.target.value)}
-          />
-        </div>
       </div>
     </div>
   );
@@ -175,7 +352,6 @@ function StepMedia({ form, onChange }) {
             </div>
           ) : (
             <>
-              <span className="cf-dropzone__icon">🖼</span>
               <p className="cf-dropzone__main">Drag & drop or click to upload</p>
               <p className="cf-dropzone__sub">PNG, JPG, WEBP · Recommended 1280×720</p>
             </>
@@ -211,7 +387,6 @@ function StepPricing({ form, onChange }) {
               onChange={() => { onChange("isFree", true); onChange("price", ""); }}
               style={{ display: "none" }}
             />
-            <span className="cf-pricing-card__icon">🆓</span>
             <span className="cf-pricing-card__label">Free</span>
             <span className="cf-pricing-card__desc">Anyone can enroll at no cost</span>
           </label>
@@ -224,7 +399,6 @@ function StepPricing({ form, onChange }) {
               onChange={() => onChange("isFree", false)}
               style={{ display: "none" }}
             />
-            <span className="cf-pricing-card__icon">💳</span>
             <span className="cf-pricing-card__label">Paid</span>
             <span className="cf-pricing-card__desc">Set a price for enrollment</span>
           </label>
@@ -258,7 +432,6 @@ function StepPublish({ form, onChange }) {
 
   return (
     <div className="cf-step-body">
-      {/* Summary card */}
       <div className="cf-summary-card">
         {form.thumbnailPreview && (
           <img src={form.thumbnailPreview} className="cf-summary-card__thumb" alt="thumbnail" />
@@ -282,18 +455,17 @@ function StepPublish({ form, onChange }) {
         </div>
       </div>
 
-      {/* Publish toggle */}
       <div className="cf-field">
         <label className="cf-label">Publish status</label>
         <div className="cf-publish-toggle-row">
           <label className={`cf-publish-opt ${!form.published ? "cf-publish-opt--active" : ""}`}>
-            <input type="radio" name="pub" checked={!form.published} onChange={() => onChange("published", false)} style={{ display:"none" }} />
-            <span>💾 Save as Draft</span>
+            <input type="radio" name="pub" checked={!form.published} onChange={() => onChange("published", false)} style={{ display: "none" }} />
+            <span> Save as Draft</span>
             <span className="cf-publish-opt__desc">Visible only to you until published</span>
           </label>
           <label className={`cf-publish-opt ${form.published ? "cf-publish-opt--active" : ""}`}>
-            <input type="radio" name="pub" checked={form.published} onChange={() => onChange("published", true)} style={{ display:"none" }} />
-            <span>🚀 Publish Now</span>
+            <input type="radio" name="pub" checked={form.published} onChange={() => onChange("published", true)} style={{ display: "none" }} />
+            <span>Publish Now</span>
             <span className="cf-publish-opt__desc">Make it live to all students</span>
           </label>
         </div>
@@ -302,12 +474,10 @@ function StepPublish({ form, onChange }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   CREATE COURSE MODAL
-───────────────────────────────────────── */
+
 function CreateCourseModal({ onClose, onSave }) {
-  const [step, setStep]   = useState(1);
-  const [form, setForm]   = useState(EMPTY_FORM);
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -319,9 +489,9 @@ function CreateCourseModal({ onClose, onSave }) {
   const validate = () => {
     const e = {};
     if (step === 1) {
-      if (!form.title.trim())       e.title       = "Title is required";
+      if (!form.title.trim()) e.title = "Title is required";
       if (!form.description.trim()) e.description = "Description is required";
-      if (!form.category)           e.category    = "Please select a category";
+      if (!form.category) e.category = "Please select a category";
     }
     if (step === 3 && !form.isFree && !form.price) {
       e.price = "Please enter a price or select Free";
@@ -351,8 +521,6 @@ function CreateCourseModal({ onClose, onSave }) {
   return (
     <div className="cf-overlay" onClick={onClose}>
       <div className="cf-modal" onClick={(e) => e.stopPropagation()}>
-
-        {/* ── Modal header ── */}
         <div className="cf-modal__header">
           <div>
             <p className="cf-modal__kicker">New Course</p>
@@ -363,7 +531,6 @@ function CreateCourseModal({ onClose, onSave }) {
           <button className="cf-modal__close" onClick={onClose}>✕</button>
         </div>
 
-        {/* ── Step progress bar ── */}
         <div className="cf-step-track">
           {STEPS.map((s) => (
             <div
@@ -380,15 +547,13 @@ function CreateCourseModal({ onClose, onSave }) {
           </div>
         </div>
 
-        {/* ── Step content ── */}
         <div className="cf-modal__body">
-          {step === 1 && <StepBasics  form={form} onChange={onChange} errors={errors} />}
-          {step === 2 && <StepMedia   form={form} onChange={onChange} />}
+          {step === 1 && <StepBasics form={form} onChange={onChange} errors={errors} />}
+          {step === 2 && <StepMedia form={form} onChange={onChange} />}
           {step === 3 && <StepPricing form={form} onChange={onChange} errors={errors} />}
           {step === 4 && <StepPublish form={form} onChange={onChange} />}
         </div>
 
-        {/* ── Footer ── */}
         <div className="cf-modal__footer">
           {step > 1 && (
             <button className="ins-btn-ghost" onClick={handleBack}>← Back</button>
@@ -400,7 +565,7 @@ function CreateCourseModal({ onClose, onSave }) {
             </button>
           ) : (
             <button className="ins-btn-primary cf-save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : form.published ? "🚀 Publish Course" : "💾 Save Draft"}
+              {saving ? "Saving…" : form.published ? " Publish Course" : " Save Draft"}
             </button>
           )}
         </div>
@@ -409,61 +574,116 @@ function CreateCourseModal({ onClose, onSave }) {
   );
 }
 
-/* ─────────────────────────────────────────
-   MAIN PAGE
-───────────────────────────────────────── */
-const EXISTING_COURSES = [
-  { id: 1, title: "React from Zero to Hero",       category: "Web Development", published: true,  level: "BEGINNER",  thumbnailUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&q=60" },
-  { id: 2, title: "Advanced TypeScript Patterns",  category: "Web Development", published: true,  level: "ADVANCED",  thumbnailUrl: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=300&q=60" },
-  { id: 3, title: "Git & GitHub for Teams",        category: "DevOps",          published: false, level: "BEGINNER",  thumbnailUrl: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=300&q=60" },
-];
 
 export default function CreateCourse() {
+  const token = localStorage.getItem('token');
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const [courses, setCourses]     = useState(EXISTING_COURSES);
-  const [saved, setSaved]         = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [saved, setSaved] = useState(false);
+  const [lessonTarget, setLessonTarget] = useState(null); 
 
-  const handleSave = (form) => {
-    const newCourse = {
-      id:           Date.now(),
-      title:        form.title,
-      category:     form.category,
-      published:    form.published,
-      level:        form.level,
-      thumbnailUrl: form.thumbnailPreview ||
-        "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=300&q=60",
-    };
-    setCourses((prev) => [newCourse, ...prev]);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const fetchCourses = async () => {
+    try {
+      const res = await axios.get(`http://localhost:8080/api/courses/my-courses/${instructorId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log(res.data)
+      setCourses(
+        (Array.isArray(res.data) ? res.data : []).map((c) => ({
+          ...c,
+          published: !!c.published,
+          free: !!c.free,
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+      setCourses([]);
+    }
+  };
+
+  useEffect(() => { fetchCourses(); }, []);
+
+  const handleSave = async (form) => {
+    try {
+      const courseRes = await axios.post(
+        "http://localhost:8080/api/courses/createcourses",
+        {
+          title: form.title,
+          description: form.description,
+          thumbnailUrl: form.thumbnailPreview || "thumb.jpg",
+          free: form.isFree,
+          totalLessons: 10,
+          totalDuration: 120,
+          INSTRUCTOR: instructorId,
+          categoryId: 3,
+          published: form.published,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const createdCourse = courseRes.data;
+
+      await axios.post(
+        "http://localhost:8080/api/lessons/create",
+        {
+          title: form.title,
+          description: form.description,
+          videoUrl: form.promoVideoUrl || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&q=60",
+          thumbnailUrl: form.thumbnailPreview || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&q=60",
+          duration: 15,
+          lessonOrder: 1,
+          instructorid: instructorId,
+          courseId: createdCourse.id,
+          Preview: form.published,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await fetchCourses();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Error creating course: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/courses/${id}/${instructorId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCourses((prev) => prev.filter((c) => c.id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const LEVEL_STYLE = {
-    BEGINNER:     { color: "#15803d", bg: "#dcfce7" },
+    BEGINNER: { color: "#15803d", bg: "#dcfce7" },
     INTERMEDIATE: { color: "#92400e", bg: "#fef3c7" },
-    ADVANCED:     { color: "#991b1b", bg: "#fee2e2" },
+    ADVANCED: { color: "#991b1b", bg: "#fee2e2" },
   };
 
   return (
     <div className="ins-page">
-      {/* ── Page header ── */}
       <div className="pg-header">
         <div>
           <h1 className="pg-header__title">Courses</h1>
-          <p className="pg-header__sub">{courses.length} courses · {courses.filter(c => c.published).length} published</p>
+          <p className="pg-header__sub">
+            {courses.length} courses · {courses.filter((c) => c.published).length} published
+          </p>
         </div>
         <button className="ins-btn-primary" onClick={() => setShowModal(true)}>
           + Create New Course
         </button>
       </div>
 
-      {/* ── Toast ── */}
-      {saved && (
-        <div className="cf-toast">✓ Course saved successfully!</div>
-      )}
+      {saved && <div className="cf-toast">✓ Course saved successfully!</div>}
 
-      {/* ── Course list ── */}
       <div className="cf-course-list">
         {courses.map((c) => {
           const lvl = LEVEL_STYLE[c.level] || LEVEL_STYLE.BEGINNER;
@@ -484,6 +704,7 @@ export default function CreateCourse() {
                   </span>
                 </div>
               </div>
+
               <div className="cf-course-row__actions">
                 <button
                   className="ins-btn-card-primary"
@@ -492,16 +713,16 @@ export default function CreateCourse() {
                   Edit
                 </button>
                 <button
-                  className="ins-btn-card-ghost"
-                  onClick={() => navigate(`/instructor/curriculum?course=${c.id}`)}
+                  className="ins-btn-card-primary"
+                  onClick={() => setLessonTarget(c)}
                 >
-                  Curriculum
+                  + Add Lesson
                 </button>
                 <button
                   className="ins-btn-card-ghost"
-                  onClick={() => navigate(`/instructor/analytics?course=${c.id}`)}
+                  onClick={() => handleDelete(c.id)}
                 >
-                  Analytics
+                  Delete
                 </button>
               </div>
             </div>
@@ -509,11 +730,18 @@ export default function CreateCourse() {
         })}
       </div>
 
-      {/* ── Modal ── */}
       {showModal && (
         <CreateCourseModal
           onClose={() => setShowModal(false)}
           onSave={handleSave}
+        />
+      )}
+
+      {lessonTarget && (
+        <AddLessonModal
+          course={lessonTarget}
+          token={token}
+          onClose={() => setLessonTarget(null)}
         />
       )}
     </div>

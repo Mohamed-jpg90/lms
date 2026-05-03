@@ -62,21 +62,21 @@ const navByRole = {
     //   icon: <MdGrade />,
     //   path: "/student/results",
     // },
-    {
-      label: "Assignments",
-      icon: <MdChecklist />,
-      path: "/student/assignments",
-    },
+    // {
+    //   label: "Assignments",
+    //   icon: <MdChecklist />,
+    //   path: "/student/assignments",
+    // },
     {
       label: "Grades",
       icon: <MdAssessment />,
       path: "/student/grades",
     },
-    {
-      label: "Forum",
-      icon: <MdForum />,
-      path: "/student/forum",
-    },
+    // {
+    //   label: "Forum",
+    //   icon: <MdForum />,
+    //   path: "/student/forum",
+    // },
     {
       label: "Certificate",
       icon: <FaCertificate />,
@@ -115,16 +115,16 @@ const navByRole = {
       icon: <FaUserGraduate />,
       path: "/instructor/students",
     },
-    {
-      label: "Analytics",
-      icon: <MdBarChart />,
-      path: "/instructor/analytics",
-    },
-    {
-      label: "Forum",
-      icon: <MdForum />,
-      path: "/instructor/forum",
-    },
+    // {
+    //   label: "Analytics",
+    //   icon: <MdBarChart />,
+    //   path: "/instructor/analytics",
+    // },
+    // {
+    //   label: "Forum",
+    //   icon: <MdForum />,
+    //   path: "/instructor/forum",
+    // },
   ],
 
   admin: [
@@ -143,21 +143,21 @@ const navByRole = {
       icon: <MdApproval />,
       path: "/admin/approvals",
     },
-    {
-      label: "Courses",
-      icon: <MdClass />,
-      path: "/admin/courses",
-    },
+    // {
+    //   label: "Courses",
+    //   icon: <MdClass />,
+    //   path: "/admin/courses",
+    // },
     {
       label: "Categories",
       icon: <MdCategory />,
       path: "/admin/categories",
     },
-    {
-      label: "Reports",
-      icon: <MdAssessment />,
-      path: "/admin/reports",
-    },
+    // {
+    //   label: "Reports",
+    //   icon: <MdAssessment />,
+    //   path: "/admin/reports",
+    // },
   ],
 };
 

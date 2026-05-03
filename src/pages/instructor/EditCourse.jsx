@@ -1,5 +1,6 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 // import "./course-form.css";
 import "./instructor.css";
 
@@ -15,63 +16,8 @@ const LEVEL_STYLE = {
   ADVANCED:     { color: "#991b1b", bg: "#fee2e2" },
 };
 
-/* ─────────────────────────────────────────
-   MOCK DATA — existing courses
-───────────────────────────────────────── */
-const MOCK_COURSES = [
-  {
-    id: 1,
-    title:         "React from Zero to Hero",
-    subtitle:      "Master modern React with hooks, context and real-world projects",
-    description:   "In this course you'll learn React from absolute scratch. We cover JSX, components, hooks, context, React Router and performance optimization through hands-on projects.",
-    category:      "Web Development",
-    level:         "BEGINNER",
-    language:      "English",
-    tags:          "react, hooks, frontend, jsx",
-    thumbnailUrl:  "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&q=70",
-    promoVideoUrl: "https://www.youtube.com/embed/dGcsHMXbSOA",
-    isFree:        false,
-    price:         "29.99",
-    published:     true,
-    totalLessons:  8,
-    enrollments:   1240,
-  },
-  {
-    id: 2,
-    title:         "Advanced TypeScript Patterns",
-    subtitle:      "Level up your TypeScript with generics, decorators and design patterns",
-    description:   "A deep-dive into advanced TypeScript features used in production codebases. Covers generics, conditional types, mapped types, decorators and module patterns.",
-    category:      "Web Development",
-    level:         "ADVANCED",
-    language:      "English",
-    tags:          "typescript, generics, patterns",
-    thumbnailUrl:  "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&q=70",
-    promoVideoUrl: "",
-    isFree:        false,
-    price:         "49.99",
-    published:     true,
-    totalLessons:  12,
-    enrollments:   580,
-  },
-  {
-    id: 3,
-    title:         "Git & GitHub for Teams",
-    subtitle:      "Version control workflows for collaborative development",
-    description:   "Everything you need to know about Git and GitHub for working in teams: branching strategies, pull requests, code review, CI/CD integration and protected branches.",
-    category:      "DevOps",
-    level:         "BEGINNER",
-    language:      "English",
-    tags:          "git, github, devops, version-control",
-    thumbnailUrl:  "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=400&q=70",
-    promoVideoUrl: "",
-    isFree:        false,
-    price:         "19.99",
-    published:     false,
-    totalLessons:  6,
-    enrollments:   0,
-  },
-];
-
+const user = JSON.parse(localStorage.getItem("user") || "null");
+const INSTRUCTOR_ID = user?.id;
 
 const STEPS = [
   { id: 1, label: "Basics",   icon: "" },
@@ -140,16 +86,7 @@ function StepBasics({ form, onChange, errors }) {
         </div>
       </div>
 
-      <div className="cf-row">
-        <div className="cf-field">
-          <label className="cf-label">Language</label>
-          <input className="cf-input" value={form.language} onChange={(e) => onChange("language", e.target.value)} />
-        </div>
-        <div className="cf-field">
-          <label className="cf-label">Tags</label>
-          <input className="cf-input" placeholder="comma separated" value={form.tags} onChange={(e) => onChange("tags", e.target.value)} />
-        </div>
-      </div>
+
     </div>
   );
 }
@@ -299,7 +236,7 @@ function StepPublish({ form, onChange }) {
 }
 
 /* ── Edit Modal ── */
-function EditCourseModal({ course, onClose, onSave }) {
+function EditCourseModal({ course, onClose, onSave, token }) {
   const [step, setStep]     = useState(1);
   const [form, setForm]     = useState({ ...course, thumbnailFile: null, thumbnailPreview: null });
   const [errors, setErrors] = useState({});
@@ -314,9 +251,9 @@ function EditCourseModal({ course, onClose, onSave }) {
   const validate = () => {
     const e = {};
     if (step === 1) {
-      if (!form.title.trim())       e.title       = "Title is required";
-      if (!form.description.trim()) e.description = "Description is required";
-      if (!form.category)           e.category    = "Please select a category";
+      if (!form.title?.trim())       e.title       = "Title is required";
+      if (!form.description?.trim()) e.description = "Description is required";
+      if (!form.category)            e.category    = "Please select a category";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -325,10 +262,32 @@ function EditCourseModal({ course, onClose, onSave }) {
   const handleSave = async () => {
     if (!validate()) return;
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    onSave(form);
-    onClose();
+    try {
+      const body = {
+        title:         form.title,
+        description:   form.description,
+        thumbnailUrl:  form.thumbnailPreview || form.thumbnailUrl || "",
+        free:          !!form.isFree,
+        publiched:     !!form.published,   // نفس الـ typo اللي في الـ API
+        totalLessons:  form.totalLessons   || 0,
+        totalDuration: form.totalDuration  || 0,
+        INSTRUCTOR:    INSTRUCTOR_ID,
+        categoryId:    form.categoryId     || 1,
+      };
+
+      await axios.put(
+        `http://localhost:8080/api/courses/updatecourses/${form.id}`,
+        body,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      onSave(form);
+      onClose();
+    } catch (err) {
+      console.error("Failed to update course:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const progress = ((step - 1) / (STEPS.length - 1)) * 100;
@@ -420,10 +379,41 @@ function EditCourseModal({ course, onClose, onSave }) {
 ───────────────────────────────────────── */
 export default function EditCourse() {
   const navigate = useNavigate();
-  const [courses, setCourses]   = useState(MOCK_COURSES);
-  const [editing, setEditing]   = useState(null);
-  const [saved, setSaved]       = useState(false);
-  const [savedId, setSavedId]   = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(null);
+  const [saved, setSaved]     = useState(false);
+  const [savedId, setSavedId] = useState(null);
+
+  // جيب الـ token من أي مكان بتخزنه (localStorage مثلاً)
+  const token = localStorage.getItem("token");
+
+  /* ── Fetch courses from API ── */
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `http://localhost:8080/api/courses/my-courses/${INSTRUCTOR_ID}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCourses(
+        (Array.isArray(res.data) ? res.data : []).map((c) => ({
+          ...c,
+          published: !!c.published,
+          isFree:    !!c.free,            
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
 
   const handleSave = (updated) => {
     setCourses((prev) =>
@@ -436,7 +426,6 @@ export default function EditCourse() {
 
   return (
     <div className="ins-page">
-      {/* Header */}
       <div className="pg-header">
         <div>
           <h1 className="pg-header__title">Edit Courses</h1>
@@ -447,77 +436,68 @@ export default function EditCourse() {
         </button>
       </div>
 
-      {/* Toast */}
       {saved && <div className="cf-toast">✓ Course updated successfully!</div>}
 
-      {/* Course cards */}
-      <div className="cf-edit-grid">
-        {courses.map((c) => {
-          const lvl = LEVEL_STYLE[c.level] || LEVEL_STYLE.BEGINNER;
-          return (
-            <div key={c.id} className={`cf-edit-card ${savedId === c.id ? "cf-edit-card--saved" : ""}`}>
-              {/* Thumbnail */}
-              <div className="cf-edit-card__thumb">
-                <img src={c.thumbnailUrl} alt={c.title} />
-                <div className="cf-edit-card__thumb-overlay">
-                  <button
-                    className="cf-edit-card__edit-btn"
-                    onClick={() => setEditing(c)}
-                  >
-                    ✏ Edit Course
-                  </button>
-                </div>
-                <span className={`ins-course-card__status ${c.published ? "ins-status--live" : "ins-status--draft"}`}>
-                  {c.published ? "● Live" : "○ Draft"}
-                </span>
-              </div>
+      {loading && <p style={{ textAlign: "center", padding: "2rem", color: "#64748b" }}>Loading courses…</p>}
 
-              {/* Body */}
-              <div className="cf-edit-card__body">
-                <div className="cf-edit-card__top">
-                  <span className="ins-course-card__cat">{c.category}</span>
-                  <span className="cf-level-tag" style={{ background: lvl.bg, color: lvl.color }}>
-                    {LEVEL_LABEL[c.level]}
+      {!loading && (
+        <div className="cf-edit-grid">
+          {courses.length === 0 && (
+            <p style={{ color: "#64748b" }}>No courses found.</p>
+          )}
+          {courses.map((c) => {
+            const lvl = LEVEL_STYLE[c.level] || LEVEL_STYLE.BEGINNER;
+            return (
+              <div key={c.id} className={`cf-edit-card ${savedId === c.id ? "cf-edit-card--saved" : ""}`}>
+                <div className="cf-edit-card__thumb">
+                  <img src={c.thumbnailUrl} alt={c.title} />
+                  <div className="cf-edit-card__thumb-overlay">
+                    <button
+                      className="cf-edit-card__edit-btn"
+                      onClick={() => setEditing(c)}
+                    >
+                      ✏ Edit Course
+                    </button>
+                  </div>
+                  <span className={`ins-course-card__status ${c.published ? "ins-status--live" : "ins-status--draft"}`}>
+                    {c.published ? "● Live" : "○ Draft"}
                   </span>
                 </div>
-                <h3 className="cf-edit-card__title">{c.title}</h3>
-                {c.subtitle && <p className="cf-edit-card__subtitle">{c.subtitle}</p>}
 
-                <div className="cf-edit-card__stats">
-                  <span>📚 {c.totalLessons} lessons</span>
-                  <span>👤 {c.enrollments} students</span>
-                  <span>{c.isFree ? "Free" : `$${c.price}`}</span>
-                </div>
+                <div className="cf-edit-card__body">
+                  <div className="cf-edit-card__top">
+                    <span className="ins-course-card__cat">{c.category}</span>
+                    <span className="cf-level-tag" style={{ background: lvl.bg, color: lvl.color }}>
+                      {LEVEL_LABEL[c.level] || c.level}
+                    </span>
+                  </div>
+                  <h3 className="cf-edit-card__title">{c.title}</h3>
+                  {c.subtitle && <p className="cf-edit-card__subtitle">{c.subtitle}</p>}
 
-                <div className="cf-edit-card__actions">
-                  <button className="ins-btn-card-primary" onClick={() => setEditing(c)}>
-                    ✏ Edit
-                  </button>
-                  <button
-                    className="ins-btn-card-ghost"
-                    onClick={() => navigate(`/instructor/curriculum?course=${c.id}`)}
-                  >
-                    Curriculum
-                  </button>
-                  <button
-                    className="ins-btn-card-ghost"
-                    onClick={() => navigate(`/instructor/analytics?course=${c.id}`)}
-                  >
-                    Analytics
-                  </button>
+                  <div className="cf-edit-card__stats">
+                    <span> {c.totalLessons} lessons</span>
+                    <span>{c.isFree ? "Free" : `$${c.price ?? ""}`}</span>
+                  </div>
+
+                  <div className="cf-edit-card__actions">
+                    <button className="ins-btn-card-primary" onClick={() => setEditing(c)}>
+                       Edit
+                    </button>
+
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Edit modal */}
       {editing && (
         <EditCourseModal
           course={editing}
           onClose={() => setEditing(null)}
           onSave={handleSave}
+          token={token}
         />
       )}
     </div>
