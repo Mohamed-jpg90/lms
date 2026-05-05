@@ -1,53 +1,17 @@
 import React, { useEffect, useState } from "react";
 import "./admin.css";
 import axios from "axios";
-/* ─────────────────────────────────────────
-   MOCK DATA  (replace with API calls)
-   GET  /admin/categories
-   POST /admin/categories
-   PATCH /admin/categories/:id
-   DELETE /admin/categories/:id
 
-   GET  /admin/tags
-   POST /admin/tags
-   DELETE /admin/tags/:id
-───────────────────────────────────────── */
-// const INIT_CATEGORIES = [
-//   { id: 1, name: "Web Development", courseCount: 8, description: "Frontend, backend and fullstack web courses" },
-//   { id: 2, name: "Backend", courseCount: 5, description: "Server-side, databases and APIs" },
-//   { id: 3, name: "Design", courseCount: 3, description: "UI/UX, graphic design and Figma" },
-//   { id: 4, name: "Data Science", courseCount: 4, description: "ML, AI, Python and data analysis" },
-//   { id: 5, name: "Computer Science", courseCount: 6, description: "Algorithms, data structures and theory" },
-//   { id: 6, name: "DevOps", courseCount: 2, description: "CI/CD, Docker, Kubernetes and cloud" },
-//   { id: 7, name: "Mobile", courseCount: 1, description: "iOS, Android and React Native" },
-// ];
-
-// const INIT_TAGS = [
-//   { id: 1, name: "react",       courseCount: 5 },
-//   { id: 2, name: "javascript",  courseCount: 8 },
-//   { id: 3, name: "python",      courseCount: 4 },
-//   { id: 4, name: "hooks",       courseCount: 3 },
-//   { id: 5, name: "typescript",  courseCount: 4 },
-//   { id: 6, name: "spring-boot", courseCount: 2 },
-//   { id: 7, name: "machine-learning", courseCount: 3 },
-//   { id: 8, name: "docker",      courseCount: 2 },
-//   { id: 9, name: "css",         courseCount: 3 },
-//   { id: 10,name: "git",         courseCount: 2 },
-//   { id: 11,name: "sql",         courseCount: 2 },
-//   { id: 12,name: "nodejs",      courseCount: 3 },
-// ];
-
-
-/* ─────────────────────────────────────────
-   CATEGORY MODAL
-───────────────────────────────────────── */
-function CategoryModal({ onClose, handleAddNewCategory }) {
+/* ───────────────── CATEGORY MODAL ───────────────── */
+function CategoryModal({ onClose, handleAddNewCategory, initialData, handleUpdateCategory }) {
   const [form, setForm] = useState({
-    name: "",
-    description: "",
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    icon: initialData?.icon || "",
   });
 
   const [error, setError] = useState("");
+  const isEdit = !!initialData;
 
   const handleSave = async () => {
     if (!form.name.trim()) {
@@ -55,7 +19,12 @@ function CategoryModal({ onClose, handleAddNewCategory }) {
       return;
     }
 
-    await handleAddNewCategory(form);
+    if (isEdit) {
+      await handleUpdateCategory(initialData.id, form);
+    } else {
+      await handleAddNewCategory(form);
+    }
+
     onClose();
   };
 
@@ -64,13 +33,14 @@ function CategoryModal({ onClose, handleAddNewCategory }) {
       <div className="ap-modal" onClick={(e) => e.stopPropagation()}>
         
         <div className="ap-modal__header">
-          <h2 className="ap-modal__title">Add Category</h2>
+          <h2 className="ap-modal__title">
+            {isEdit ? "Edit Category" : "Add Category"}
+          </h2>
           <button className="ap-modal__close" onClick={onClose}>✕</button>
         </div>
 
         <div className="ap-modal__body">
 
-          {/* NAME */}
           <div className="ap-field">
             <label className="ap-label">
               Category Name <span className="ap-req">*</span>
@@ -89,7 +59,6 @@ function CategoryModal({ onClose, handleAddNewCategory }) {
             {error && <p className="ap-error">{error}</p>}
           </div>
 
-          {/* DESCRIPTION */}
           <div className="ap-field">
             <label className="ap-label">Description</label>
 
@@ -115,7 +84,7 @@ function CategoryModal({ onClose, handleAddNewCategory }) {
           </button>
 
           <button className="ad-btn-primary" onClick={handleSave}>
-            Add Category
+            {isEdit ? "Update Category" : "Add Category"}
           </button>
         </div>
 
@@ -123,6 +92,8 @@ function CategoryModal({ onClose, handleAddNewCategory }) {
     </div>
   );
 }
+
+/* ───────────────── DELETE MODAL ───────────────── */
 function DeleteConfirm({ item, type, onClose, onConfirm }) {
   return (
     <div className="ap-overlay" onClick={onClose}>
@@ -153,47 +124,33 @@ function DeleteConfirm({ item, type, onClose, onConfirm }) {
   );
 }
 
-
+/* ───────────────── MAIN ───────────────── */
 export default function Categories_Tags() {
 
-  const token = localStorage.getItem("token")
-  const [created, setCreated] = useState(false)
-  const [allCategory, setAllCategory] = useState([])
-
-
-
-
-
-
-  // const [categories, setCategories] = useState(INIT_CATEGORIES);
-  // const [tags,       setTags]       = useState(INIT_TAGS);
+  const token = localStorage.getItem("token");
+  const [allCategory, setAllCategory] = useState([]);
 
   const [catSearch, setCatSearch] = useState("");
-  const [tagSearch, setTagSearch] = useState("");
-  const [catModal, setCatModal] = useState(null);   // null | "new" | category object
-  const [deleteTarget, setDeleteTarget] = useState(null); // { item, type }
-  const [newTagInput, setNewTagInput] = useState("");
-  const [tagSaving, setTagSaving] = useState(false);
+  const [catModal, setCatModal] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   const [toast, setToast] = useState("");
 
-
-  const [categoryName, setCategoryName] = useState(null)
-  const [categoryDescription, setCategoryDescription] = useState(null)
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(""), 3000);
   };
 
-
-
-
-
-
-  const handleAddNewCategory = async (name) => {
+  /* ADD */
+  const handleAddNewCategory = async (form) => {
     try {
       const res = await axios.post(
         "http://localhost:8080/api/categories/create",
-        { name },
+        {
+          name: form.name,
+          description: form.description,
+          icon: form.icon,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -201,63 +158,61 @@ export default function Categories_Tags() {
         }
       );
 
-      setAllCategory((prev) => [
-        ...prev,
-        {
-          id: res.data.id || Date.now(),
-          name: res.data.name || name,
-          courseCount: 0,
-        },
-      ]);
+      setAllCategory((prev) => [...prev, res.data]);
 
     } catch (err) {
       console.log(err);
     }
   };
-  /* ── Category CRUD ── */
-  // const saveCategory = (cat) => {
-  //   setCategories((prev) => {
-  //     const exists = prev.find((c) => c.id === cat.id);
-  //     return exists ? prev.map((c) => (c.id === cat.id ? cat : c)) : [cat, ...prev];
-  //   });
-  //   showToast(cat.courseCount === 0 && !INIT_CATEGORIES.find((c) => c.id === cat.id)
-  //     ? "Category added!" : "Category updated!");
-  // };
 
-  const deleteCategory = (id) => {
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    showToast("Category deleted.");
+  /* UPDATE */
+  const handleUpdateCategory = async (id, form) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:8080/api/categories/update/${id}`,
+        form,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAllCategory((prev) =>
+        prev.map((cat) => (cat.id === id ? res.data : cat))
+      );
+
+      showToast("Category updated successfully");
+
+    } catch (err) {
+      console.log(err);
+      showToast("Update failed");
+    }
   };
 
-  /* ── Tag CRUD ── */
-  // const addTag = async () => {
-  //   const name = newTagInput.trim().toLowerCase().replace(/\s+/g, "-");
-  //   if (!name) return;
-  //   if (tags.find((t) => t.name === name)) { showToast("Tag already exists."); return; }
-  //   setTagSaving(true);
-  //   /* API call: POST /admin/tags { name } */
-  //   await new Promise((r) => setTimeout(r, 400));
-  //   setTags((prev) => [{ id: Date.now(), name, courseCount: 0 }, ...prev]);
-  //   setNewTagInput("");
-  //   setTagSaving(false);
-  //   showToast("Tag added!");
-  // };
+  /* DELETE */
+  const deleteCategory = async (id) => {
+    try {
+      await axios.delete(
+        `http://localhost:8080/api/categories/delete/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  // const deleteTag = (id) => {
-  //   setTags((prev) => prev.filter((t) => t.id !== id));
-  //   showToast("Tag deleted.");
-  // };
+      setAllCategory((prev) => prev.filter((c) => c.id !== id));
 
-  // const filteredCats = categories.filter((c) =>
-  //   c.name.toLowerCase().includes(catSearch.toLowerCase())
-  // );
+      showToast("Category deleted successfully");
 
-  // const filteredTags = tags.filter((t) =>
-  //   t.name.toLowerCase().includes(tagSearch.toLowerCase())
-  // );
+    } catch (err) {
+      console.log(err);
+      showToast("Failed to delete category");
+    }
+  };
 
-
-
+  /* FETCH */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -270,19 +225,16 @@ export default function Categories_Tags() {
           }
         );
         setAllCategory(res.data);
-        console.log(res.data)
       } catch (e) {
         console.log(e);
       }
     };
-    console.log(token)
 
     fetchCategories();
-  }, [])
+  }, []);
 
   return (
     <div className="ap-page">
-      {/* Header */}
       <div className="pg-header">
         <div>
           <h1 className="pg-header__title">Categories </h1>
@@ -292,9 +244,6 @@ export default function Categories_Tags() {
         </div>
       </div>
 
-      {/* Toast */}
-      {/* {toast && <div className="ap-toast">{toast}</div>} */}
-
       <div className="ap-two-col">
 
         <div className="ap-panel">
@@ -303,115 +252,56 @@ export default function Categories_Tags() {
               <h2 className="ap-panel__title">Categories</h2>
               <p className="ap-panel__sub">{allCategory.length} total</p>
             </div>
-            <button className="ad-btn-primary" onClick={() => setCatModal("new")
-
-            }>
+            <button className="ad-btn-primary" onClick={() => setCatModal("new")}>
               + Add Category
             </button>
           </div>
 
-          {/* Search */}
           <div className="ap-panel__search">
             <div className="ip-search-wrap">
-              <input className="ip-search" placeholder="Search categories…"
-                value={catSearch} onChange={(e) => setCatSearch(e.target.value)} />
-              {catSearch && <button className="ip-search-clear" onClick={() => setCatSearch("")}>✕</button>}
+              <input className="ip-search"
+                placeholder="Search categories…"
+                value={catSearch}
+                onChange={(e) => setCatSearch(e.target.value)}
+              />
             </div>
           </div>
 
-          {/* List */}
           <div className="ap-cat-list">
-            {allCategory.length === 0 ? (
-              <div className="pg-empty"><span>🗂</span><p>No categories found.</p></div>
-            ) : (
-              allCategory.map((cat) => (
-                <div key={cat.id} className="ap-cat-card">
-                  <div className="ap-cat-card__icon">🗂</div>
-                  <div className="ap-cat-card__info">
-                    <h3 className="ap-cat-card__name">{cat.name}</h3>
-                    {cat.description && (
-                      <p className="ap-cat-card__desc">{cat.description}</p>
-                    )}
-                    <span className="ap-cat-card__count">{cat.courseCount} courses</span>
-                  </div>
-                  <div className="ap-cat-card__actions">
-                    <button className="ad-action-btn" onClick={() => setCatModal(cat)}>Edit</button>
-                    <button
-                      className="ad-action-btn ad-action-btn--danger"
-                      onClick={() => setDeleteTarget({ item: cat, type: "Category" })}
-                    >
-                      Delete
-                    </button>
-                  </div>
+            {allCategory.map((cat) => (
+              <div key={cat.id} className="ap-cat-card">
+                <div className="ap-cat-card__icon">🗂</div>
+
+                <div className="ap-cat-card__info">
+                  <h3 className="ap-cat-card__name">{cat.name}</h3>
+                  {cat.description && (
+                    <p className="ap-cat-card__desc">{cat.description}</p>
+                  )}
+                  <span className="ap-cat-card__count">{cat.courseCount} courses</span>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
 
-        {/* ══════════════════════════════
-            RIGHT — TAGS
-        ══════════════════════════════ */}
-        {/* <div className="ap-panel">
-          <div className="ap-panel__header">
-            <div>
-              <h2 className="ap-panel__title">Tags</h2>
-              <p className="ap-panel__sub">{tags.length} total</p>
-            </div>
-          </div>
+                <div className="ap-cat-card__actions">
+                  <button className="ad-action-btn" onClick={() => setCatModal(cat)}>Edit</button>
 
-          <div className="ap-tag-add-row">
-            <input
-              className="ap-input ap-input--tag"
-              placeholder="New tag name (e.g. react-native)"
-              value={newTagInput}
-              onChange={(e) => setNewTagInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addTag()}
-            />
-            <button className="ad-btn-primary" onClick={addTag} disabled={tagSaving || !newTagInput.trim()}>
-              {tagSaving ? "…" : "+ Add"}
-            </button>
-          </div>
-
-          <div className="ap-panel__search">
-            <div className="ip-search-wrap">
-              <input className="ip-search" placeholder="Search tags…"
-                value={tagSearch} onChange={(e) => setTagSearch(e.target.value)} />
-              {tagSearch && <button className="ip-search-clear" onClick={() => setTagSearch("")}>✕</button>}
-            </div>
-          </div>
-
-          <div className="ap-tag-cloud">
-            {filteredTags.length === 0 ? (
-              <div className="pg-empty"><span>🏷</span><p>No tags found.</p></div>
-            ) : (
-              filteredTags.map((tag) => (
-                <div key={tag.id} className="ap-tag-chip">
-                  <span className="ap-tag-chip__name">#{tag.name}</span>
-                  <span className="ap-tag-chip__count">{tag.courseCount}</span>
                   <button
-                    className="ap-tag-chip__del"
-                    onClick={() => setDeleteTarget({ item: tag, type: "Tag" })}
-                    title="Delete tag"
+                    className="ad-action-btn ad-action-btn--danger"
+                    onClick={() => setDeleteTarget({ item: cat, type: "Category" })}
                   >
-                    ✕
+                    Delete
                   </button>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
-
-          <p className="ap-tag-legend">
-            Badge number = courses using this tag. Press Enter or click "+ Add" to create.
-          </p>
-        </div> */}
+        </div>
       </div>
 
-      {/* ── Modals ── */}
       {catModal && (
         <CategoryModal
           onClose={() => setCatModal(null)}
           handleAddNewCategory={handleAddNewCategory}
+          handleUpdateCategory={handleUpdateCategory}
+          initialData={typeof catModal === "object" ? catModal : null}
         />
       )}
 
@@ -420,7 +310,7 @@ export default function Categories_Tags() {
           item={deleteTarget.item}
           type={deleteTarget.type}
           onClose={() => setDeleteTarget(null)}
-          onConfirm={deleteTarget.type === "Category" ? deleteCategory : deleteTag}
+          onConfirm={deleteCategory}
         />
       )}
     </div>

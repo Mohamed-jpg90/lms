@@ -43,7 +43,7 @@ export default function Quiz({ onSubmit }) {
         let url = "";
 
         if (isFinalExam) {
-          url = `http://localhost:8080/api/quizzes-exams/courses/{courseId}/exam`;
+         url = `http://localhost:8080/api/quizzes-exams/courses/${courseId}/exam`;;
          
         } else {
           url = `http://localhost:8080/api/quizzes/courses/${courseId}/lessons/${lessonId}/quiz`;
@@ -89,7 +89,7 @@ export default function Quiz({ onSubmit }) {
 
  const submitUrl = isFinalExam
   ? `http://localhost:8080/api/quizzes-exams/courses/${courseId}/exam/submit`
-  : `http://localhost:8080/api/quizzes-exams/courses/${courseId}/quiz/submit`;
+  : `http://localhost:8080/api/quizzes/courses/${courseId}/quiz/submit`;
 
 const handleSubmit = useCallback(async () => {
   if (!quiz) return;
