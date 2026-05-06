@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./instructor.css";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 
 
 
@@ -308,7 +308,7 @@ export default function Dashboard() {
 
   const fetchCourses = async () => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/courses/my-courses/${instructorId}`, {
+      const res = await axios.get(`${BASE_URL}api/courses/my-courses/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses(
@@ -347,7 +347,7 @@ export default function Dashboard() {
         </div>
 
         {/* KPIs */}
-        <div className="ins-hero__kpis">
+        {/* <div className="ins-hero__kpis">
           <div className="ins-kpi">
             <span className="ins-kpi__val">{totalStudents}</span>
             <span className="ins-kpi__label">Students</span>
@@ -364,7 +364,7 @@ export default function Dashboard() {
             <span className="ins-kpi__val">${formatK(totalRevenue)}</span>
             <span className="ins-kpi__label">Revenue</span>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* ////////////////////////////////////////////////////// */}
@@ -420,7 +420,7 @@ export default function Dashboard() {
             <div className="ins-section__header">
               <div>
                 <h2 className="ins-section__title">Enrolled Students</h2>
-                <p className="ins-section__sub">{totalStudents} students across all courses</p>
+                <p className="ins-section__sub"> students across all courses</p>
               </div>
               {/* ── NAVIGATE BUTTON ── */}
               <button
@@ -431,46 +431,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Search */}
-            <div className="ins-search-wrap">
-              <input
-                className="ins-search"
-                placeholder="Search by name, email or course…"
-                value={studentSearch}
-                onChange={(e) => setStudentSearch(e.target.value)}
-              />
-              {studentSearch && (
-                <button className="ins-search-clear" onClick={() => setStudentSearch("")}>✕</button>
-              )}
-            </div>
-
-            <div className="ins-table-wrap">
-              <table className="ins-table">
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Course</th>
-                    <th>Progress</th>
-                    <th>Grade</th>
-                    <th>Enrolled</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStudents.length > 0
-                    ? filteredStudents.map((s) => (
-                      <StudentRow key={s.id} student={s} />
-                    ))
-                    : (
-                      <tr>
-                        <td colSpan={5} className="ins-table__empty">
-                          No students match your search.
-                        </td>
-                      </tr>
-                    )
-                  }
-                </tbody>
-              </table>
-            </div>
+   
 
             <div className="ins-section__footer">
               <button

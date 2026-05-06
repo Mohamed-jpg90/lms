@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 // import "./pages.css";
-
+import BASE_URL from "../../config/url";
 export default function InstructorApprovals() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -19,13 +19,13 @@ export default function InstructorApprovals() {
   const onSubmit = async (data) => {
     try {
       await axios.post(
-        "http://localhost:8080/api/admin/users/CreateUser",
+        `${BASE_URL}api/admin/users/CreateUser`,
         {
           email: data.email,
           password: data.password,
           firstname: data.firstName,
           lastname: data.lastName,
-          role: "INSTRUCTOR", // ✅ ثابت
+          role: "INSTRUCTOR", 
         },
         {
           headers: {
@@ -34,9 +34,9 @@ export default function InstructorApprovals() {
         }
       );
 
-      alert("Instructor account created successfully ✅");
+      alert("Instructor account created successfully ");
       reset();
-      navigate("/admin/users"); // أو /admin/dashboard
+      navigate("/admin/users");
     } catch (e) {
       console.error(e);
       alert(
@@ -49,7 +49,6 @@ export default function InstructorApprovals() {
   return (
     <div className="auth-page">
       <div className="auth-form-wrap">
-        {/* Brand */}
         <div className="auth-brand">
           <span className="auth-brand__logo">🎓</span>
           <span className="auth-brand__name">LMS Platform</span>
@@ -59,7 +58,6 @@ export default function InstructorApprovals() {
         <p>Only admins can create instructor accounts.</p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          {/* Name row */}
           <div className="auth-row">
             <div className="auth-field">
               <input
@@ -86,7 +84,6 @@ export default function InstructorApprovals() {
             </div>
           </div>
 
-          {/* Email */}
           <div className="auth-field">
             <input
               type="email"
@@ -103,7 +100,6 @@ export default function InstructorApprovals() {
             {errors.email && <p>{errors.email.message}</p>}
           </div>
 
-          {/* Password */}
           <div className="auth-field">
             <input
               type="password"
@@ -121,7 +117,6 @@ export default function InstructorApprovals() {
             {errors.password && <p>{errors.password.message}</p>}
           </div>
 
-          {/* Confirm Password */}
           <div className="auth-field">
             <input
               type="password"

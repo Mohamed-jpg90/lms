@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./admin.css";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 /* ───────────────── CATEGORY MODAL ───────────────── */
 function CategoryModal({ onClose, handleAddNewCategory, initialData, handleUpdateCategory }) {
   const [form, setForm] = useState({
@@ -145,7 +145,7 @@ export default function Categories_Tags() {
   const handleAddNewCategory = async (form) => {
     try {
       const res = await axios.post(
-        "http://localhost:8080/api/categories/create",
+        `${BASE_URL}api/categories/create`,
         {
           name: form.name,
           description: form.description,
@@ -169,7 +169,7 @@ export default function Categories_Tags() {
   const handleUpdateCategory = async (id, form) => {
     try {
       const res = await axios.put(
-        `http://localhost:8080/api/categories/update/${id}`,
+        `${BASE_URL}api/categories/update/${id}`,
         form,
         {
           headers: {
@@ -194,7 +194,7 @@ export default function Categories_Tags() {
   const deleteCategory = async (id) => {
     try {
       await axios.delete(
-        `http://localhost:8080/api/categories/delete/${id}`,
+        `${BASE_URL}api/categories/delete/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -217,7 +217,7 @@ export default function Categories_Tags() {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:8080/api/categories/all",
+          `${BASE_URL}api/categories/all`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

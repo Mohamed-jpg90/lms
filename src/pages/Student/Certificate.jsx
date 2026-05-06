@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 // import "./pages.css";
-
+import BASE_URL from "../../config/url";
 function formatDate(iso) {
   return new Date(iso).toLocaleDateString("en-US", {
     year: "numeric",
@@ -133,7 +133,7 @@ export default function Certificate() {
   useEffect(() => {
     const fetchCertificates = async () => {
       const res = await axios.get(
-        "http://localhost:8080/api/certificates",
+        `${BASE_URL}api/certificates`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

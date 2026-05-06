@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 /* ── User from localStorage ── */
 const user = JSON.parse(localStorage.getItem("user") || "null");
 const token = localStorage.getItem("token");
@@ -27,9 +27,7 @@ function getInitials(user) {
   return `${user?.firstname?.[0] ?? ""}${user?.lastname?.[0] ?? ""}`.toUpperCase();
 }
 
-/* ─────────────────────────────
-   Progress Card
-───────────────────────────── */
+
 function ProgressCard({ enrollment }) {
   const { course, progressPercentage } = enrollment;
 
@@ -68,31 +66,15 @@ function ProgressCard({ enrollment }) {
           {course.title}
         </h3>
 
-        <p className="db-course-card__inst">
+        {/* <p className="db-course-card__inst">
           {course.instructorName || "Instructor"}
-        </p>
+        </p> */}
 
-        <div className="db-prog-bar-wrap">
-          <div className="db-prog-bar">
-            <div
-              className="db-prog-bar__fill"
-              style={{
-                width: `${progressPercentage}%`,
-              }}
-            />
-          </div>
 
-          <span className="db-prog-label">
-            {Math.round(progressPercentage)}%
-          </span>
-        </div>
 
-        <p className="db-lessons-count">
-          {lessonsCompleted} / {course.totalLessons} lessons
-        </p>
 
         <Link
-          to={`/student/player?courseId=${course.id}`}
+          to={`/student/details/${course.id}`}
           className="db-btn-continue"
         >
           Continue →
@@ -102,9 +84,7 @@ function ProgressCard({ enrollment }) {
   );
 }
 
-/* ─────────────────────────────
-   Completed Row
-───────────────────────────── */
+
 function CompletedRow({ enrollment }) {
   const { course, completedAt, certificate } = enrollment;
 
@@ -142,7 +122,7 @@ function CompletedRow({ enrollment }) {
             {course.level}
           </span>
 
-          <span> · {course.instructorName}</span>
+          {/* <span> · {course.instructorName}</span> */}
           <span>
             {" "}
             · Completed {formatDate(completedAt)}
@@ -170,9 +150,7 @@ function CompletedRow({ enrollment }) {
   );
 }
 
-/* ─────────────────────────────
-   Main Dashboard
-───────────────────────────── */
+
 export default function Dashboard() {
   const [enrollments, setEnrollments] = useState([]);
   const [tab, setTab] = useState("progress");
@@ -182,7 +160,7 @@ export default function Dashboard() {
     const loadDashboard = async () => {
       try {
         const enrollRes = await axios.get(
-          "http://localhost:8080/api/enrollments/my-courses",
+          `${BASE_URL}api/enrollments/my-courses`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -194,7 +172,7 @@ export default function Dashboard() {
           enrollRes.data.map(async (e) => {
             try {
               const progressRes = await axios.get(
-                `http://localhost:8080/api/quizzes-exams/courses/${e.courseId}/progress`,
+                `${BASE_URL}api/quizzes-exams/courses/${e.courseId}/progress`,
                 {
                   headers: {
                     Authorization: `Bearer ${token}`,
@@ -239,7 +217,7 @@ export default function Dashboard() {
                       e.categoryName || "General",
                   },
                   instructorName:
-                    e.instructorName || "Instructor",
+                    e.instructor.firstName || "Instructor",
                 },
               };
             } catch (error) {

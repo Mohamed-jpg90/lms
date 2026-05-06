@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 const LEVEL_META = {
   BEGINNER: { label: "Beginner", bg: "#dcfce7", color: "#15803d" },
   INTERMEDIATE: { label: "Intermediate", bg: "#fef3c7", color: "#92400e" },
@@ -29,7 +29,7 @@ export default function CourseDetails() {
     const fetchCourse = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/courses/${courseId}/details`,
+          `${BASE_URL}api/courses/${courseId}/details`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ export default function CourseDetails() {
       setLoadingEnroll(true);
 
       const res = await axios.post(
-        `http://localhost:8080/api/enrollments/${courseId}`,
+        `${BASE_URL}api/enrollments/${courseId}`,
         {},
         {
           headers: {

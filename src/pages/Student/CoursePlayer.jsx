@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
+import BASE_URL from "../../config/url";
 
 function fmtDuration(min) {
   const h = Math.floor(min / 60);
@@ -29,7 +30,7 @@ export default function CoursePlayer() {
     const fetchCourseDetails = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:8080/api/courses/${courseId}/details`,
+          `${BASE_URL}api/courses/${courseId}/details`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

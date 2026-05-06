@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./admin.css";
-
-/* ───────────────── Access Denied ───────────────── */
+import BASE_URL from "../../config/url";
 function AccessDenied({ navigate }) {
   return (
     <div className="ad-denied">
@@ -26,7 +25,6 @@ function AccessDenied({ navigate }) {
   );
 }
 
-/* ───────────────── Helpers ───────────────── */
 function getInitials(first, last) {
   return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase();
 }
@@ -63,11 +61,11 @@ export default function Dashbourd() {
 
     const fetchData = async () => {
       const studentsRes = await axios.get(
-        "http://localhost:8080/api/admin/users/students",
+        `${BASE_URL}api/admin/users/students`,
         { headers }
       );
       const instructorsRes = await axios.get(
-        "http://localhost:8080/api/admin/users/instructors",
+        `${BASE_URL}api/admin/users/instructors`,
         { headers }
       );
 

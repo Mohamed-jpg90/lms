@@ -77,7 +77,7 @@ function QuestionBuilder({ questions, setQuestions, accentColor = "#7c3aed" }) {
     <div>
       {questions.length === 0 && (
         <div style={S.emptyQ}>
-          <div style={S.emptyQIcon}>🧩</div>
+          <div style={S.emptyQIcon}></div>
           <p style={S.emptyQTitle}>No questions yet</p>
           <p style={S.emptyQSub}>Click the button below to add your first question</p>
         </div>
@@ -94,7 +94,7 @@ function QuestionBuilder({ questions, setQuestions, accentColor = "#7c3aed" }) {
                   style={{ ...S.typePill, ...(q.questionType===t ? { background: accentColor+"22", color: accentColor, border:`1px solid ${accentColor}66` } : {}) }}
                   onClick={() => updateQ(q._uid,"questionType",t)}
                 >
-                  {t === "MCQ" ? "📝 MCQ" : "✅ True / False"}
+                  {t === "MCQ" ? " MCQ" : " True / False"}
                 </button>
               ))}
             </div>
@@ -161,9 +161,7 @@ function QuestionBuilder({ questions, setQuestions, accentColor = "#7c3aed" }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   QUIZ BUILDER PAGE  (per lesson)
-════════════════════════════════════════════════════════ */
+
 function QuizBuilderPage({ lesson, course, onBack }) {
   const [step, setStep]           = useState(1); // 1=form, 2=questions
   const [quizId, setQuizId]       = useState(null);
@@ -317,9 +315,6 @@ function QuizBuilderPage({ lesson, course, onBack }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   EXAM BUILDER PAGE  (per course)
-════════════════════════════════════════════════════════ */
 function ExamBuilderPage({ course, onBack }) {
   const [step, setStep]           = useState(1);
   const [examId, setExamId]       = useState(null);
@@ -371,7 +366,7 @@ function ExamBuilderPage({ course, onBack }) {
           answers: q.answers.map(a => ({ answerText: a.answerText, correct: !!a.correct, answerOrder: a.answerOrder })),
         }, { headers: authH() });
       }
-      setSuccess(`✓ ${questions.length} question(s) saved to "${examTitle}" successfully!`);
+      setSuccess(` ${questions.length} question(s) saved to "${examTitle}" successfully!`);
       setQuestions([]);
     } catch (e) {
       console.error(e);
@@ -385,7 +380,7 @@ function ExamBuilderPage({ course, onBack }) {
       <div style={{ ...S.topBar, borderBottom:`3px solid ${accent}` }}>
         <button style={S.backBtn} onClick={onBack}>← Back</button>
         <div style={S.topCenter}>
-          <span style={S.topIcon}>📝</span>
+          <span style={S.topIcon}></span>
           <div>
             <p style={{ ...S.topSub, color: accent }}>Final Exam Builder</p>
             <h1 style={S.topTitle}>
@@ -396,7 +391,7 @@ function ExamBuilderPage({ course, onBack }) {
         {step===2 ? (
           <button style={{ ...S.saveBtn, background: accent, opacity: !questions.length||saving?0.5:1 }}
             onClick={handleSaveQuestions} disabled={!questions.length||saving}>
-            {saving ? "Saving…" : `💾 Save ${questions.length} Question(s)`}
+            {saving ? "Saving…" : ` Save ${questions.length} Question(s)`}
           </button>
         ) : <div style={{width:160}}/>}
       </div>
@@ -405,7 +400,6 @@ function ExamBuilderPage({ course, onBack }) {
       {error   && <div style={S.errorBar}>{error}</div>}
 
       <div style={S.builderBody}>
-        {/* STEP 1 */}
         {step===1 && (
           <div style={S.formCard}>
             <h2 style={{ ...S.formCardTitle, color: accent }}>🎓 Final Exam Details</h2>
@@ -451,7 +445,6 @@ function ExamBuilderPage({ course, onBack }) {
           </div>
         )}
 
-        {/* STEP 2 */}
         {step===2 && (
           <div>
             <div style={S.stepNav}>
@@ -472,9 +465,7 @@ function ExamBuilderPage({ course, onBack }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   ADD LESSON MODAL
-════════════════════════════════════════════════════════ */
+
 function AddLessonModal({ course, onClose, onSaved }) {
   const [form, setForm] = useState({ title:"", description:"", videoUrl:"", thumbnailUrl:"", preview:false });
   const [loading, setLoading] = useState(false);
@@ -537,9 +528,7 @@ function AddLessonModal({ course, onClose, onSaved }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   LESSONS PANEL
-════════════════════════════════════════════════════════ */
+
 function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -558,9 +547,10 @@ function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
   const del = async (id) => {
     if (!window.confirm("Delete this lesson?")) return;
     try {
-      await axios.delete(`${BASE}/api/lesson/delete/${id}`, { headers: authH() });
+      await axios.delete(`${BASE}/api/lessons/delete/${id}?instructorId=${INSTRUCTOR_ID}`, { headers: authH() });
       setLessons(p=>p.filter(l=>l.id!==id));
-    } catch(e) { alert("Failed to delete."); }
+    } catch(e) { console.log(e);
+     }
   };
 
   if (loading) return <div style={S.panelLoading}>Loading lessons…</div>;
@@ -574,16 +564,15 @@ function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
 
       {lessons.length===0 ? (
         <div style={S.emptyPanel}>
-          <span>📂</span><p>No lessons yet — add the first one!</p>
+          <span></span><p>No lessons yet — add the first one!</p>
         </div>
       ) : lessons.map((l, i) => (
         <div key={l.id} style={S.lessonRow}>
           <span style={S.lessonNum}>{i+1}</span>
           <span style={S.lessonTitle}>{l.title}</span>
 
-          {/* 📋 Quiz button per lesson */}
           <button style={S.quizBtn} onClick={()=>onOpenQuiz(l)} title="Create quiz for this lesson">
-            📋 Add Quiz
+             Add Quiz
           </button>
 
           <button style={S.dangerBtn} onClick={()=>del(l.id)}>🗑</button>
@@ -593,9 +582,6 @@ function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════
-   MAIN CURRICULUM PAGE
-════════════════════════════════════════════════════════ */
 export default function Curriculum() {
   const [courses,  setCourses]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -637,7 +623,7 @@ export default function Curriculum() {
       {/* Page header */}
       <div style={S.pageHead}>
         <div>
-          <h1 style={S.pageTitle}>📚 Curriculum Builder</h1>
+          <h1 style={S.pageTitle}> Curriculum Builder</h1>
           <p style={S.pageSub}>{courses.length} course{courses.length!==1?"s":""}</p>
         </div>
       </div>
@@ -645,7 +631,7 @@ export default function Curriculum() {
       {loading ? (
         <div style={S.center}>Loading courses…</div>
       ) : courses.length===0 ? (
-        <div style={S.emptyPage}><span style={{fontSize:44}}>📚</span><p>No courses found.</p></div>
+        <div style={S.emptyPage}><span style={{fontSize:44}}></span><p>No courses found.</p></div>
       ) : (
         <div style={S.courseList}>
           {courses.map(c => {
@@ -674,20 +660,17 @@ export default function Curriculum() {
                     </div>
                   </div>
 
-                  {/* ── Course action buttons ── */}
                   <div style={S.courseActions}>
-                    {/* Toggle lessons */}
                     <button style={S.primaryBtn} onClick={()=>setExpanded(open?null:c.id)}>
                       {open ? "▲ Hide" : "▼ Lessons"}
                     </button>
 
-                    {/* 📝 Final Exam — per course */}
                     <button style={S.examBtn} onClick={()=>setActivePage({type:"exam",course:c})}>
-                      📝 Final Exam
+                       Final Exam
                     </button>
 
                     {/* Delete course */}
-                    <button style={S.ghostBtn} onClick={()=>delCourse(c.id)} title="Delete course">🗑</button>
+                    {/* <button style={S.ghostBtn} onClick={()=>delCourse(c.id)} title="Delete course">🗑</button> */}
                   </div>
                 </div>
 

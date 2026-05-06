@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./instructor.css";
 import axios from "axios";
 import { useEffect } from "react";
+import BASE_URL from "../../config/url";
 
 const CATEGORIES = ["Web Development", "Backend", "Data Science", "Design", "DevOps", "Computer Science", "Mobile", "Other"];
 const LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
@@ -71,7 +72,7 @@ function AddLessonModal({ course, onClose, token }) {
     setSaving(true);
     try {
       await axios.post(
-        "http://localhost:8080/api/lessons/create",
+        `${BASE_URL}api/lessons/create`,
         {
           title: lesson.title,
           description: lesson.description,
@@ -585,7 +586,7 @@ export default function CreateCourse() {
 
   const fetchCourses = async () => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/courses/my-courses/${instructorId}`, {
+      const res = await axios.get(`${BASE_URL}api/courses/my-courses/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -608,7 +609,7 @@ export default function CreateCourse() {
   const handleSave = async (form) => {
     try {
       const courseRes = await axios.post(
-        "http://localhost:8080/api/courses/createcourses",
+        `${BASE_URL}api/courses/createcourses`,
         {
           title: form.title,
           description: form.description,
@@ -626,7 +627,7 @@ export default function CreateCourse() {
       const createdCourse = courseRes.data;
 
       await axios.post(
-        "http://localhost:8080/api/lessons/create",
+        `${BASE_URL}api/lessons/create`,
         {
           title: form.title,
           description: form.description,
@@ -652,7 +653,7 @@ export default function CreateCourse() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/courses/${id}/${instructorId}`, {
+      await axios.delete(`${BASE_URL}api/courses/${id}/${instructorId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCourses((prev) => prev.filter((c) => c.id !== id));

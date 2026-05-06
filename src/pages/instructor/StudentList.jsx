@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import "./instructor.css";
-
+import BASE_URL from "../../config/url";
 /* ─────────────────────────────────────────
    CONFIG — adjust to your auth approach
 ───────────────────────────────────────── */
@@ -109,7 +109,7 @@ export default function StudentList() {
     setError(null);
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/courses/my-courses/${instructorId}`,
+        `${BASE_URL}api/courses/my-courses/${instructorId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const list = (Array.isArray(res.data) ? res.data : []).map((c) => ({
@@ -138,7 +138,7 @@ export default function StudentList() {
         courseList.map((course) =>
           axios
             .get(
-              `http://localhost:8080/api/enrollments/EnrolledStudents/${course.id}`,
+              `${BASE_URL}api/enrollments/EnrolledStudents/${course.id}`,
               { headers: { Authorization: `Bearer ${token}` } }
             )
             .then((res) =>

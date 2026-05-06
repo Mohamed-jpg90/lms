@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useForm } from "react-hook-form";
-
+import BASE_URL from "../config/url";
 
 function LogIn({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ function LogIn({ onLoginSuccess }) {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axios.post(`${BASE_URL}api/auth/login`, {
         email:    data.email,
         password: data.password,
       });

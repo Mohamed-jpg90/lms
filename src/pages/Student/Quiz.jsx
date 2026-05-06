@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
+import BASE_URL from "../../config/url";
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60)
@@ -43,10 +44,10 @@ export default function Quiz({ onSubmit }) {
         let url = "";
 
         if (isFinalExam) {
-         url = `http://localhost:8080/api/quizzes-exams/courses/${courseId}/exam`;;
+         url = `${BASE_URL}api/quizzes-exams/courses/${courseId}/exam`;;
          
         } else {
-          url = `http://localhost:8080/api/quizzes/courses/${courseId}/lessons/${lessonId}/quiz`;
+          url = `${BASE_URL}api/quizzes/courses/${courseId}/lessons/${lessonId}/quiz`;
         }
         const res = await axios.get(url, {
           headers: {
@@ -54,6 +55,8 @@ export default function Quiz({ onSubmit }) {
           },
         });
 
+        console.log(res.data);
+        
         setQuiz(res.data);
 
         const totalSeconds = (res.data.timeLimit || 10) * 60;
@@ -88,8 +91,8 @@ export default function Quiz({ onSubmit }) {
 
 
  const submitUrl = isFinalExam
-  ? `http://localhost:8080/api/quizzes-exams/courses/${courseId}/exam/submit`
-  : `http://localhost:8080/api/quizzes/courses/${courseId}/quiz/submit`;
+  ? `${BASE_URL}api/quizzes-exams/courses/${courseId}/exam/submit`
+  : `${BASE_URL}api/quizzes/courses/${courseId}/quiz/submit`;
 
 const handleSubmit = useCallback(async () => {
   if (!quiz) return;
@@ -219,8 +222,8 @@ localStorage.setItem("lms_quiz_result", JSON.stringify({
               onClick={toggleFlag}
             >
               {flagged.has(q.id)
-                ? "🚩 Flagged"
-                : "⚑ Flag"}
+                ? "Flagged"
+                : " Flag"}
             </button>
           </div>
 

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 
-
+import BASE_URL from "../config/url";
 const ROLE_OPTIONS = [
   { value: "STUDENT",    label: "Student",    desc: "Browse & enroll in courses" },
   // { value: "INSTRUCTOR", label: "Instructor", desc: "Create & manage courses"    },
@@ -28,7 +28,7 @@ function Register({ onLoginSuccess }) {
 
   const onSubmit = async (data) => {
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/signup", {
+      const res = await axios.post(`${BASE_URL}api/auth/signup`, {
         email: data.email,
         password:  data.password,
         firstname:data.firstName,

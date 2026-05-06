@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 function formatTime(seconds = 0) {
   const m = Math.floor(seconds / 60).toString().padStart(2, "0");
   const s = (seconds % 60).toString().padStart(2, "0");
@@ -33,14 +33,13 @@ function CircleScore({ score, passed }) {
 export default function QuizResult() {
   const token = localStorage.getItem("token");
 
-  // ✅ جيب البيانات من localStorage بدل sessionStorage
   const stored = useMemo(() => {
     const raw = localStorage.getItem("lms_quiz_result");
     return raw ? JSON.parse(raw) : null;
   }, []);
 
   const [questions, setQuestions] = useState([]);
-  const [loadingQ, setLoadingQ]   = useState(true);
+  const [loadingQ, setLoadingQ] = useState(true);
 
   useEffect(() => {
     if (!stored) return;
@@ -48,8 +47,8 @@ export default function QuizResult() {
     const fetchQuestions = async () => {
       try {
         const url = stored.isFinalExam
-          ? `http://localhost:8080/api/quizzes-exams/courses/${stored.courseId}/exam`
-          : `http://localhost:8080/api/quizzes/courses/${stored.courseId}/lessons/${stored.lessonId}/quiz`;
+          ? `${BASE_URL}api/quizzes-exams/courses/${stored.courseId}/exam`
+          : `${BASE_URL}api/quizzes/courses/${stored.courseId}/lessons/${stored.lessonId}/quiz`;
 
         const res = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
@@ -92,70 +91,7 @@ export default function QuizResult() {
 
       <div className="quiz-body quiz-body--result">
         {/* ── Left: Question Breakdown ── */}
-        <div className="quiz-panel">
-          <p className="result-section-title">Question Breakdown</p>
-
-          {loadingQ ? (
-            <p style={{ color: "#94a3b8", padding: 16 }}>Loading questions…</p>
-          ) : questions.length === 0 ? (
-            <p style={{ color: "#94a3b8", padding: 16 }}>No question data available.</p>
-          ) : (
-            <div className="result-questions">
-              {questions.map((q, i) => {
-                const givenAnswerId  = stored.answers?.[q.id];
-                // ✅ يتعامل مع correct سواء كانت boolean أو 1/0
-                const correctAnswer  = q.answers?.find(a => a.correct === true || a.correct === 1);
-                const givenAnswer    = q.answers?.find(a => a.id === Number(givenAnswerId));
-                const isCorrect      = givenAnswer && correctAnswer && givenAnswer.id === correctAnswer.id;
-
-                return (
-                  <div
-                    key={q.id}
-                    className={`result-q ${isCorrect ? "result-q--correct" : "result-q--wrong"}`}
-                  >
-                    <div className="result-q__header">
-                      <span className="result-q__num">Q{i + 1}</span>
-                      <span className={`result-q__status ${isCorrect ? "status--correct" : "status--wrong"}`}>
-                        {isCorrect ? "✓ Correct" : "✗ Incorrect"}
-                      </span>
-                    </div>
-
-                    <p className="result-q__text">{q.questionText}</p>
-
-                    <div className="result-q__answers">
-                      {/* إجابة الطالب لو غلط */}
-                      {givenAnswer && !isCorrect && (
-                        <div className="result-answer result-answer--wrong">
-                          <span className="result-answer__label">Your answer</span>
-                          <span className="result-answer__val">
-                            {givenAnswer.answerText || givenAnswer.answer_text}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* الإجابة الصحيحة */}
-                      {correctAnswer && (
-                        <div className="result-answer result-answer--correct">
-                          <span className="result-answer__label">Correct answer</span>
-                          <span className="result-answer__val">
-                            {correctAnswer.answerText || correctAnswer.answer_text}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* سكيب */}
-                      {!givenAnswer && (
-                        <div className="result-answer result-answer--skipped">
-                          <span className="result-answer__label">Skipped</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+  
 
         {/* ── Right: Score sidebar ── */}
         <aside className="quiz-sidebar">
@@ -195,7 +131,7 @@ export default function QuizResult() {
             className="quiz-submit-all"
             style={{ background: "#1d4ed8", marginTop: 12 }}
             onClick={() => {
-              localStorage.removeItem("lms_quiz_result"); // ✅ امسح بعد المراجعة
+              localStorage.removeItem("lms_quiz_result");
               window.history.back();
             }}
           >

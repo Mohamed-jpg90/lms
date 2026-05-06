@@ -1,12 +1,8 @@
 import React, {useEffect, useState, useMemo } from "react";
 import "./admin.css";
 import axios from "axios";
-/* ─────────────────────────────────────────
-   MOCK DATA
-   GET    /admin/users?page=&q=&role=&status=
-   PATCH  /admin/users/:id  { active, role }
-   DELETE /admin/users/:id
-───────────────────────────────────────── */
+import BASE_URL from "../../config/url";
+
 const INIT_USERS = [
   { id: 1,  firstName: "Youssef", lastName: "Zienhoum", email: "youssef@mail.com", role: "STUDENT",    active: true,  createdAt: "2024-09-01", lastActive: "2025-04-20" },
   { id: 2,  firstName: "Sara",    lastName: "Ahmed",    email: "sara@lms.com",     role: "INSTRUCTOR", active: true,  createdAt: "2023-06-01", lastActive: "2025-04-21" },
@@ -146,8 +142,8 @@ const updateUser = async (id, patch) => {
   try {
     if (patch.hasOwnProperty("active")) {
       const endpoint = patch.active
-        ? `http://localhost:8080/api/admin/users/unblock/${id}`
-        : `http://localhost:8080/api/admin/users/block/${id}`;
+        ? `${BASE_URL}api/admin/users/unblock/${id}`
+        : `${BASE_URL}api/admin/users/block/${id}`;
 
       await axios.put(endpoint, {}, {
         headers: {
@@ -158,7 +154,7 @@ const updateUser = async (id, patch) => {
 
     if (patch.hasOwnProperty("role")) {
       await axios.put(
-        `http://localhost:8080/api/admin/users/role/${id}`,
+        `${BASE_URL}api/admin/users/role/${id}`,
         { role: patch.role },
         {
           headers: {
@@ -181,7 +177,7 @@ const updateUser = async (id, patch) => {
 const deleteUser = async (id) => {
   try {
     await axios.delete(
-      ` http://localhost:8080/api/admin/users/delete/${id}`,
+      ` ${BASE_URL}api/admin/users/delete/${id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -218,7 +214,7 @@ useEffect(() => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:8080/api/admin/users", 
+        `${BASE_URL}api/admin/users`, 
         {
           headers: {
             Authorization: `Bearer ${token}`,

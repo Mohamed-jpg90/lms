@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 // import "./course-form.css";
 import "./instructor.css";
-
+import BASE_URL from "../../config/url";
 /* ─────────────────────────────────────────
    SHARED CONSTANTS (same as CreateCourse)
 ───────────────────────────────────────── */
@@ -126,7 +126,7 @@ function StepMedia({ form, onChange }) {
             </div>
           ) : (
             <>
-              <span className="cf-dropzone__icon">🖼</span>
+              <span className="cf-dropzone__icon"></span>
               <p className="cf-dropzone__main">Drag & drop or click to replace</p>
               <p className="cf-dropzone__sub">PNG, JPG, WEBP · 1280×720 recommended</p>
             </>
@@ -156,13 +156,13 @@ function StepPricing({ form, onChange, errors }) {
         <div className="cf-pricing-cards">
           <label className={`cf-pricing-card ${form.isFree ? "cf-pricing-card--active" : ""}`}>
             <input type="radio" name="pricing" checked={form.isFree} onChange={() => { onChange("isFree", true); onChange("price", ""); }} style={{ display: "none" }} />
-            <span className="cf-pricing-card__icon">🆓</span>
+            <span className="cf-pricing-card__icon"></span>
             <span className="cf-pricing-card__label">Free</span>
             <span className="cf-pricing-card__desc">Anyone can enroll at no cost</span>
           </label>
           <label className={`cf-pricing-card ${!form.isFree ? "cf-pricing-card--active" : ""}`}>
             <input type="radio" name="pricing" checked={!form.isFree} onChange={() => onChange("isFree", false)} style={{ display: "none" }} />
-            <span className="cf-pricing-card__icon">💳</span>
+            <span className="cf-pricing-card__icon"></span>
             <span className="cf-pricing-card__label">Paid</span>
             <span className="cf-pricing-card__desc">Set a price for enrollment</span>
           </label>
@@ -221,12 +221,12 @@ function StepPublish({ form, onChange }) {
         <div className="cf-publish-toggle-row">
           <label className={`cf-publish-opt ${!form.published ? "cf-publish-opt--active" : ""}`}>
             <input type="radio" name="pub" checked={!form.published} onChange={() => onChange("published", false)} style={{ display:"none" }} />
-            <span>💾 Save as Draft</span>
+            <span> Save as Draft</span>
             <span className="cf-publish-opt__desc">Visible only to you until published</span>
           </label>
           <label className={`cf-publish-opt ${form.published ? "cf-publish-opt--active" : ""}`}>
             <input type="radio" name="pub" checked={form.published} onChange={() => onChange("published", true)} style={{ display:"none" }} />
-            <span>🚀 Published</span>
+            <span> Published</span>
             <span className="cf-publish-opt__desc">Live to all students</span>
           </label>
         </div>
@@ -268,7 +268,7 @@ function EditCourseModal({ course, onClose, onSave, token }) {
         description:   form.description,
         thumbnailUrl:  form.thumbnailPreview || form.thumbnailUrl || "",
         free:          !!form.isFree,
-        publiched:     !!form.published,   // نفس الـ typo اللي في الـ API
+        publiched:     !!form.published,   
         totalLessons:  form.totalLessons   || 0,
         totalDuration: form.totalDuration  || 0,
         INSTRUCTOR:    INSTRUCTOR_ID,
@@ -276,7 +276,7 @@ function EditCourseModal({ course, onClose, onSave, token }) {
       };
 
       await axios.put(
-        `http://localhost:8080/api/courses/updatecourses/${form.id}`,
+        `${BASE_URL}api/courses/updatecourses/${form.id}`,
         body,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -365,7 +365,7 @@ function EditCourseModal({ course, onClose, onSave, token }) {
           )}
           {step === STEPS.length && (
             <button className="ins-btn-primary cf-save-btn" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : form.published ? "🚀 Update & Publish" : "💾 Save Draft"}
+              {saving ? "Saving…" : form.published ? " Update & Publish" : " Save Draft"}
             </button>
           )}
         </div>
@@ -393,7 +393,7 @@ export default function EditCourse() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `http://localhost:8080/api/courses/my-courses/${INSTRUCTOR_ID}`,
+        `${BASE_URL}api/courses/my-courses/${INSTRUCTOR_ID}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCourses(

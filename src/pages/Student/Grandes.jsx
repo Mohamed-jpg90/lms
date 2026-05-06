@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
+import BASE_URL from "../../config/url";
 /* ─────────────────────────────────────────
    HELPERS (كما هي)
 ───────────────────────────────────────── */
@@ -41,21 +41,19 @@ export default function Grades() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // 1️⃣ enrolled courses
       const enrollRes = await axios.get(
-        "http://localhost:8080/api/enrollments/my-courses",
+        `${BASE_URL}api/enrollments/my-courses`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const enrolledCourses = enrollRes.data;
 
-      // 2️⃣ grades per course
       const finalCourses = await Promise.all(
         enrolledCourses.map(async (enroll) => {
           const courseId = enroll.courseId;
 
           const progressRes = await axios.get(
-            `http://localhost:8080/api/quizzes-exams/courses/${courseId}/progress`,
+            `${BASE_URL}api/quizzes-exams/courses/${courseId}/progress`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
 
@@ -181,7 +179,7 @@ function CourseGradeCard({ course }) {
           </p>
         </div>
 
-        <div className="gc-card__grade-area">
+        {/* <div className="gc-card__grade-area">
           {course.overallGrade !== null ? (
             <>
               <span
@@ -197,7 +195,7 @@ function CourseGradeCard({ course }) {
           ) : (
             <span className="gc-card__in-progress">In progress</span>
           )}
-        </div>
+        </div> */}
       </div>
 
       {open && (
