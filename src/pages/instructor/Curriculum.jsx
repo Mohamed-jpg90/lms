@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-
-const BASE = "http://localhost:8080";
+import BASE_URL from "../../config/url";
+const BASE = BASE_URL;
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -179,7 +179,7 @@ function QuizBuilderPage({ lesson, course, onBack }) {
     if (!form.title.trim()) return;
     setCreating(true); setError("");
     try {
-      const res = await axios.post(`${BASE}/api/quizzes/create-quiz`, {
+      const res = await axios.post(`${BASE}api/quizzes/create-quiz`, {
         title:          form.title,
         TimeLimit:      Number(form.timeLimit),
         totalQuistions: Number(form.totalQuistions),
@@ -206,7 +206,7 @@ function QuizBuilderPage({ lesson, course, onBack }) {
     try {
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        await axios.post(`${BASE}/api/questions/quizzes/${quizId}/questions`, {
+        await axios.post(`${BASE}api/questions/quizzes/${quizId}/questions`, {
           questionText:  q.questionText,
           questionType:  q.questionType,
           questionOrder: i + 1,
@@ -332,7 +332,7 @@ function ExamBuilderPage({ course, onBack }) {
     if (!form.title.trim()) return;
     setCreating(true); setError("");
     try {
-      const res = await axios.post(`${BASE}/api/quizzes-exams/create-exam`, {
+      const res = await axios.post(`${BASE}api/quizzes-exams/create-exam`, {
         title:          form.title,
         timelimit:      Number(form.timelimit),
         totalquistions: Number(form.totalquistions),
@@ -358,7 +358,7 @@ function ExamBuilderPage({ course, onBack }) {
     try {
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        await axios.post(`${BASE}/api/questions/exams/${examId}/questions`, {
+        await axios.post(`${BASE}api/questions/exams/${examId}/questions`, {
           questionText:  q.questionText,
           questionType:  q.questionType,
           questionOrder: i + 1,
@@ -476,7 +476,7 @@ function AddLessonModal({ course, onClose, onSaved }) {
     if (!form.title.trim()) return;
     setLoading(true); setError("");
     try {
-      await axios.post(`${BASE}/api/lessons/create`, {
+      await axios.post(`${BASE}api/lessons/create`, {
         title:        form.title,
         description:  form.description,
         videoUrl:     form.videoUrl     || "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=300&q=60",
@@ -536,7 +536,7 @@ function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
   const fetch = async () => {
     setLoading(true);
     try {
-      const r = await axios.get(`${BASE}/api/lessons/course/${course.id}`, { headers: authH() });
+      const r = await axios.get(`${BASE}api/lessons/course/${course.id}`, { headers: authH() });
       setLessons(Array.isArray(r.data) ? r.data : []);
     } catch(e) { console.error(e); setLessons([]); }
     finally { setLoading(false); }
@@ -547,7 +547,7 @@ function LessonsPanel({ course, onAddLesson, onOpenQuiz }) {
   const del = async (id) => {
     if (!window.confirm("Delete this lesson?")) return;
     try {
-      await axios.delete(`${BASE}/api/lessons/delete/${id}?instructorId=${INSTRUCTOR_ID}`, { headers: authH() });
+      await axios.delete(`${BASE}api/lessons/delete/${id}?instructorId=${INSTRUCTOR_ID}`, { headers: authH() });
       setLessons(p=>p.filter(l=>l.id!==id));
     } catch(e) { console.log(e);
      }
@@ -593,7 +593,7 @@ export default function Curriculum() {
   const loadCourses = async () => {
     setLoading(true);
     try {
-      const r = await axios.get(`${BASE}/api/courses/my-courses/${INSTRUCTOR_ID}`, { headers: authH() });
+      const r = await axios.get(`${BASE}api/courses/my-courses/${INSTRUCTOR_ID}`, { headers: authH() });
       setCourses((Array.isArray(r.data)?r.data:[]).map(c=>({...c,published:!!c.published,free:!!c.free})));
     } catch(e) { console.error(e); setCourses([]); }
     finally { setLoading(false); }
@@ -604,7 +604,7 @@ export default function Curriculum() {
   const delCourse = async (id) => {
     if (!window.confirm("Delete this course?")) return;
     try {
-      await axios.delete(`${BASE}/api/courses/delete/${id}`, { headers: authH() });
+      await axios.delete(`${BASE}api/courses/delete/${id}`, { headers: authH() });
       setCourses(p=>p.filter(c=>c.id!==id));
       if (expanded===id) setExpanded(null);
     } catch(e) { alert("Failed to delete course."); }
